@@ -31,34 +31,43 @@ This project is a flagship demonstration of **AI Residency (AIR)** — the next-
 
 The following evidence highlights the technical depth and operational transparency achieved through this human-agent partnership.
 
-````carousel
-![01 - Global Strategy & Exposure](docs/portfolio_images/01_dashboard_overview.png)
-**Control Center**: The multi-broker dashboard provides a high-level view of portfolio intelligence, equity curves, and real-time P&L tracking across Alpaca and IBKR.
-<!-- slide -->
-![02 - Intraday Execution Map](docs/portfolio_images/02_intraday_analysis.png)
-**Performance Audit**: Detailed performance analysis comparing **Actual vs. Potential P&L**. This section measures the "Capture Gap" — proving execution efficiency against a feasible best-case simulation.
-<!-- slide -->
-![03 - Strategic Holdings & Multi-Day Thesis](docs/portfolio_images/03_strategic_holdings_cards.png)
-**Strategic Logic**: The bot manages multi-day positions with auto-generated "Theses," ensuring every trade has a documented rationale for long-term optimization.
-<!-- slide -->
-![04 - Strategic Efficiency & Sector Architecture](docs/portfolio_images/04_strategic_efficiency.png)
-**Risk Management**: Portfolio concentration and sector-level performance metrics ensure the bot maintains a balanced, diversified exposure automatically.
-<!-- slide -->
-![05 - Global Intelligence & Thematic Research](docs/portfolio_images/05_thematic_research.png)
-**AI Research Layer**: Powered by LLMs, this tier scans macro sentiments and global news to identify emerging themes, allowing the system to pivot its bias based on live research.
-<!-- slide -->
-![06 - Management Insight Decision Logs](docs/portfolio_images/06_decision_logs.png)
-**Decision Transparency**: Full auditability. Every decision to BUY, SELL, or SKIP is logged with a detailed rationale and confidence score for 100% accountability.
-<!-- slide -->
-![07 - Sector Rotation Architecture](docs/portfolio_images/07_sector_rotation.png)
-**Tactical Edge**: Visualizing relative strength across major market sectors to guide the bot's tactical rotation and allocation strategy.
-<!-- slide -->
-![08 - Control Audit & Self-Correction Trails](docs/portfolio_images/08_control_audit_logs.png)
-**Autonomous Evolution**: Evidence of nightly self-tuning. The bot logs its own parameter adjustments (margins, buffers) based on simulated market gaps.
-<!-- slide -->
-![09 - Alpha Optimizer](docs/portfolio_images/09_alpha_optimizer.png)
-**Closed-Loop Learning**: The Alpha Optimizer screen showing the bot's ability to learn from recent performance and adjust its operational plan for maximum ROCE.
-````
+### 🖥️ Platform Showcase
+
+#### 01 - Control Center: Global Strategy & Exposure
+![Control Center](docs/portfolio_images/01_dashboard_overview.png)
+*The multi-broker dashboard provides a high-level view of portfolio intelligence, equity curves, and real-time P&L tracking across Alpaca and IBKR.*
+
+#### 02 - Performance Audit: Intraday Execution Map
+![Performance Audit](docs/portfolio_images/02_intraday_analysis.png)
+*Detailed performance analysis comparing **Actual vs. Potential P&L**. This section measures the "Capture Gap" — proving execution efficiency against a feasible best-case simulation.*
+
+#### 03 - Strategic Logic: Multi-Day Thesis
+![Strategic Logic](docs/portfolio_images/03_strategic_holdings_cards.png)
+*The bot manages multi-day positions with auto-generated "Theses," ensuring every trade has a documented rationale for long-term optimization.*
+
+#### 04 - Risk Management: Sector Architecture
+![Risk Management](docs/portfolio_images/04_strategic_efficiency.png)
+*Portfolio concentration and sector-level performance metrics ensure the bot maintains a balanced, diversified exposure automatically.*
+
+#### 05 - AI Research Layer: Thematic Research
+![AI Research Layer](docs/portfolio_images/05_thematic_research.png)
+*Powered by LLMs, this tier scans macro sentiments and global news to identify emerging themes, allowing the system to pivot its bias based on live research.*
+
+#### 06 - Transparency: Management Insight Logs
+![Decision Transparency](docs/portfolio_images/06_decision_logs.png)
+*Full auditability. Every decision to BUY, SELL, or SKIP is logged with a detailed rationale for 100% accountability.*
+
+#### 07 - Tactical Edge: Sector Rotation
+![Tactical Edge](docs/portfolio_images/07_sector_rotation.png)
+*Visualizing relative strength across major market sectors to guide tactical rotation and allocation.*
+
+#### 08 - Autonomous Evolution: Control Audit Logs
+![Autonomous Evolution](docs/portfolio_images/08_control_audit_logs.png)
+*Evidence of nightly self-tuning. The bot logs its own parameter adjustments (margins, buffers) based on simulated market gaps.*
+
+#### 09 - Continuous Learning: Alpha Optimizer
+![Alpha Optimizer](docs/portfolio_images/09_alpha_optimizer.png)
+*The Alpha Optimizer screen showing the bot's ability to learn from recent performance and adjust its operational plan.*
 
 ### 🚀 The "AI Residency" Approach
 Unlike traditional development, this bot was built using **Agentic Orchestration**. As the Human Operator, I acted as the "Digital Architect," guiding multiple AI agents to solve complex engineering challenges:
