@@ -7,6 +7,7 @@ A fully autonomous, machine-learning-enhanced trading system designed for consis
 
 ## 🚀 Key Features (Phase 3)
 - **3-Tier Orchestration**: Modular separation of Daily Prep (T1), Intraday Execution (T2), and AI Intelligence (T3).
+- **Accelerated Learning Universe (ALU)**: Nightly hindsight analysis of 50 global symbols to rapidly scale ML experience without increasing capital risk.
 - **Survival Mode**: Automated macro circuit breaker (VIX > 40) that halts buys and shifts to defensive postures.
 - **Fee-Aware Sizing**: Minimum Viable Capital (MVC) logic to ensure trades remain profitable after commissions.
 - **Cloud Archiving**: Automated monthly data shipping to Google Drive via `rclone`.
@@ -79,7 +80,7 @@ Unlike traditional development, this bot was built using **Agentic Orchestration
 
 ## 📈 Operational Status
 The bot currently operates in a daily cycle:
-1. **08:00 EST**: Data ingestion, retraining of XGBoost confidence gates.
+1. **08:00 EST**: Ingestion of 50 global candidates, Accelerated Learning hindsight analysis, and retraining of XGBoost confidence gates.
 2. **09:30 EST**: Deployment of the Intraday trading loop.
 3. **16:00 EST**: Automated P&L settlement and risk reporting.
 4. **17:00 EST**: Cloud archiving of high-fidelity decision logs.
