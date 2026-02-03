@@ -13,6 +13,13 @@ A fully autonomous, machine-learning-enhanced trading system designed for consis
 - **Cloud Archiving**: Automated monthly data shipping to Google Drive via `rclone`.
 - **Management Insight**: High-fidelity JSONL decision logs displayed in a premium Streamlit dashboard.
 - **Multi-Broker**: Unified routing for Alpaca (US), IBKR (Global), and Crypto.
+- **Sentinel SRE**: Autonomous health monitoring and "Self-Healing" agent that fixes technical bugs and audits trading strategy in real-time.
+    - **Manual Run**:
+        ```bash
+        python agent/sentinel_agent.py
+        ```
+    - **Direct Feedback**: The agent writes to `config/sentinel_directive.json`. The bot reads this to perform "Strategic Resets" or adjust confidence floors mid-day.
+    - **Strategy Auditing**: If the Sentinel flags "Strategic Stagnation," it means the bot's parameter tuning is not producing trades. Review `logs/control_audit_log.jsonl` for details.
 
 ## 📂 Documentation Hub
 For detailed guides on the architecture and product vision, please refer to the `docs/` folder:
@@ -84,6 +91,7 @@ The bot currently operates in a daily cycle:
 2. **09:30 EST**: Deployment of the Intraday trading loop.
 3. **16:00 EST**: Automated P&L settlement and risk reporting.
 4. **17:00 EST**: Cloud archiving of high-fidelity decision logs.
+5. **Sentinel Scan**: Autonomous SRE agent runs every 4 hours to verify system health and perform strategy audits.
 
 ---
 *Developed for Advanced Agentic Trading.*
