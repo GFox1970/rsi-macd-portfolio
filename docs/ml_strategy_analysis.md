@@ -50,11 +50,76 @@ The bot generates [perfect_trades.csv](file:///home/gary/rsi-macd-bot/data/ml/pe
 
 ---
 
-## 3. Findings & Recommendations
+## 3. Complete Learning Ecosystem
+
+The bot employs a multi-layered, continuous learning architecture that operates in a closed loop:
+
+### 🔄 The Learning Flow
+
+```
+LIVE TRADING
+    ↓
+enhanced_decision_log.jsonl (logs every decision: BUY/SELL/SKIP)
+    ↓
+    ├─→ ML Pipeline (nightly) → Retrains models based on what worked
+    └─→ Sentinel Nightly Pulse (post-market) → Analyzes MISSED opportunities
+            ↓
+        sentinel_feedback.json → Stores strategic gaps
+            ↓
+        HealerAgent (nightly) → Generates technical fixes
+            ↓
+        healer_active_directives.json → Code-level repair instructions
+            ↓
+        (Applied to trading logic) → Bot improves itself
+            ↓
+        BACK TO LIVE TRADING (improved)
+```
+
+### 📊 Layer 1: Operational Truth (`enhanced_decision_log.jsonl`)
+**Purpose**: Real-time log of ALL trading decisions  
+**Who Uses It**: MLDataCollector, SentinelAgent, Dashboard  
+**Frequency**: Every trading decision  
+**Value**: Ground truth for "What did I do and why?"
+
+### 🧠 Layer 2: Tactical Learning (ML Pipeline)
+**Purpose**: Retrains XGBoost models based on historical outcomes  
+**Data Source**: `enhanced_decision_log.jsonl` + historical price data  
+**Frequency**: Nightly via `daily_orchestrator.py`  
+**Value**: Learns "What technical patterns lead to profit?"
+
+### 🕵️ Layer 3: Strategic Audit (Sentinel Agent)
+**Purpose**: POST-MORTEM analysis of missed opportunities  
+**Data Source**: `PerformanceAnalyzer` (actual vs. potential performance)  
+**Frequency**: Nightly, after market close  
+**Triggers**: HealerAgent  
+**Value**: Identifies "What strategic gaps exist?" (e.g., overly conservative VOLATILE mode)
+
+### 🔧 Layer 4: Autonomous Repair (HealerAgent)
+**Purpose**: Translates Sentinel findings into code-level fixes  
+**Data Source**: `data/sentinel_feedback.json`  
+**Frequency**: Nightly, after Sentinel Pulse  
+**Output**: `data/healer_active_directives.json`  
+**Value**: "How do I fix it?" - Autonomous code repair based on strategic failures
+
+### 🎯 Integration Points
+- **Daily Orchestrator**: Runs the complete learning cycle nightly
+  1. ML Pipeline retraining
+  2. Sentinel Pulse (performance audit)
+  3. Healer Pulse (directive generation)
+- **Live Trading**: Applies learned improvements in real-time
+- **Dashboard**: Displays all decision logs and audit results
+
+### 📋 Deprecated Components
+- **monitor-health.yml (4-hour GitHub Actions workflow)**: Archived as redundant. The integrated nightly pulse in `daily_orchestrator.py` provides superior timing and automation.
+
+---
+
+## 4. Findings & Recommendations
 
 ### 💡 Strengths
 - **Robust Feature Set**: The inclusion of temporal and volatility data makes the model aware of market context beyond simple price action.
 - **Defensive Design**: The "fail-open" logic ensures that ML failures (model missing, loading errors) don't crash the bot, though they may reduce performance.
+- **Self-Healing Loop**: The Sentinel + Healer integration enables autonomous strategic improvement without manual intervention.
 
 ### ⚠️ Identified Gaps (Potential Development Areas)
 - **Feature Schema Drift**: If the model is retrained with new features but the bot is not updated, it defaults to zero-filling. We should implement an automated schema validation check.

@@ -11,9 +11,12 @@ graph TB
         A -->|2. Auto-Tuning| C[Adaptive Optimizer]
         A -->|3. Strategic Analysis| D[AI Strategic Agent]
         A -->|4. ML Retraining| E[ML Pipeline]
-        A -->|5. Targets| F[Candidate Selector]
-        A -->|6. Cleanup| G[Log Rotator]
-        A -->|7. Cloud Sync| H[Data Archiver / rclone]
+        A -->|5. Sentinel Pulse| SENT[Sentinel Agent]
+        A -->|6. Healer Pulse| HEAL[HealerAgent]
+        A -->|7. Targets| F[Candidate Selector]
+        A -->|8. Cleanup| G[Log Rotator]
+        A -->|9. Cloud Sync| H[Data Archiver / rclone]
+        SENT -->|Strategic Gaps| HEAL
     end
 
     subgraph "Tier 2: Intraday Runtime (Docker/Systemd)"

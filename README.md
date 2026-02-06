@@ -100,8 +100,10 @@ The bot currently operates in a daily cycle:
 1. **08:00 EST**: Ingestion of 50 global candidates, Accelerated Learning hindsight analysis, and retraining of XGBoost confidence gates.
 2. **09:30 EST**: Deployment of the Intraday trading loop.
 3. **16:00 EST**: Automated P&L settlement and risk reporting.
-4. **17:00 EST**: Cloud archiving of high-fidelity decision logs.
-5. **Sentinel Scan**: Autonomous SRE agent runs every 4 hours to verify system health and perform strategy audits.
+4. **17:00 EST**: 
+   - **Sentinel Pulse**: Nightly audit of missed opportunities and strategic failures
+   - **Healer Pulse**: Autonomous generation of technical fixes based on Sentinel findings
+   - Cloud archiving of high-fidelity decision logs
 
 ---
 *Developed for Advanced Agentic Trading.*
