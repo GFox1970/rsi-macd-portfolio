@@ -23,7 +23,8 @@ A fully autonomous, machine-learning-enhanced trading system designed for consis
         ```bash
         python agent/sentinel_agent.py
         ```
-    - **Self-Healing**: Integrated `HealerAgent` translates strategic findings into technical directives, which are autonomously applied to fix gating issues, weight adjustments, and threshold tuning.
+    - **Self-Healing**: Integrated `HealerAgent` uses **Gemini API** to translate strategic findings into technical directives, which can be applied by **Antigravity AI Agent** to fix gating issues, weight adjustments, and threshold tuning.
+    - **LLM-Powered Analysis**: Both Sentinel (strategic audit) and Healer (directive generation) leverage Gemini for intelligent code-level recommendations.
     - **Direct Feedback**: The agent writes to `config/sentinel_directive.json`. The bot reads this to perform "Strategic Resets" or adjust confidence floors mid-day.
     - **Strategy Auditing**: If the Sentinel flags "Strategic Stagnation," it means the bot's parameter tuning is not producing trades. Review `logs/control_audit_log.jsonl` for details.
 

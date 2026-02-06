@@ -94,12 +94,30 @@ enhanced_decision_log.jsonl (logs every decision: BUY/SELL/SKIP)
 **Triggers**: HealerAgent  
 **Value**: Identifies "What strategic gaps exist?" (e.g., overly conservative VOLATILE mode)
 
+**LLM Integration**:
+- **Gemini API**: Analyzes performance gaps and generates strategic recommendations in natural language
+- **Audit Scope**: Reviews `enhanced_decision_log.jsonl`, compares actual P&L vs. "perfect trades," identifies why opportunities were missed
+
 ### 🔧 Layer 4: Autonomous Repair (HealerAgent)
 **Purpose**: Translates Sentinel findings into code-level fixes  
 **Data Source**: `data/sentinel_feedback.json`  
 **Frequency**: Nightly, after Sentinel Pulse  
 **Output**: `data/healer_active_directives.json`  
 **Value**: "How do I fix it?" - Autonomous code repair based on strategic failures
+
+**LLM Integration**:
+- **Gemini API**: Used by HealerAgent to analyze Sentinel findings and generate technical directives (e.g., "Adjust VOLATILE mode weights in `trading_agent.py` to prioritize technical_score > 0.85")
+- **Antigravity AI Agent**: Can be invoked (manually or via future automation) to apply directives by editing code, running tests, and committing fixes
+- **Token Management**: Gemini requests are rate-limited; HealerAgent includes retry logic and fallback to manual directive creation
+
+**Directive Structure**:
+Each directive includes:
+- `target_symbol`: Symbol the fix applies to (or "GLOBAL")
+- `target_file`: File path to modify
+- `problem`: Description of strategic gap
+- `fix`: Step-by-step repair instructions
+- `verification_plan`: How to validate the fix
+- `can_auto_apply`: Boolean flag for safe automation
 
 ### 🎯 Integration Points
 - **Daily Orchestrator**: Runs the complete learning cycle nightly
