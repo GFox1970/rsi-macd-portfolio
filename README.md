@@ -9,15 +9,21 @@ A fully autonomous, machine-learning-enhanced trading system designed for consis
 - **3-Tier Orchestration**: Modular separation of Daily Prep (T1), Intraday Execution (T2), and AI Intelligence (T3).
 - **Accelerated Learning Universe (ALU)**: Nightly hindsight analysis of 50 global symbols to rapidly scale ML experience without increasing capital risk.
 - **Survival Mode**: Automated macro circuit breaker (VIX > 40) that halts buys and shifts to defensive postures.
+- **Adaptive Risk Management**: Dynamic VOLATILE mode that prioritizes high-confidence technical signals (>0.85) over macro caution in volatile conditions.
+- **Conviction-Based Sizing**: Order sizes scale from 0.5x to 2.0x based on ML confidence with ADR dampening for volatility control.
+- **Short-Selling Protocol**: Risk-guarded short selling with 4% hard stop-loss, whitelisted symbols (AAPL, TSLA, NVDA, META, HOOD, etc.), and 0.5% max position sizing.
+- **The Runner**: Staged profit-taking protocol with partial exits at 2%, 5%, and 10% gains, plus adaptive trailing stops.
 - **Fee-Aware Sizing**: Minimum Viable Capital (MVC) logic to ensure trades remain profitable after commissions.
 - **Cloud Archiving**: Automated monthly data shipping to Google Drive via `rclone`.
 - **Management Insight**: High-fidelity JSONL decision logs displayed in a premium Streamlit dashboard.
 - **Multi-Broker**: Unified routing for Alpaca (US), IBKR (Global), and Crypto.
-- **Sentinel SRE**: Autonomous health monitoring and "Self-Healing" agent that fixes technical bugs and audits trading strategy in real-time.
+- **Sentinel SRE**: Autonomous health monitoring and **Self-Healing Loop** that audits trading strategy and automatically generates technical fixes.
+    - **Nightly Pulse**: Runs automatically after market close via `daily_orchestrator.py`
     - **Manual Run**:
         ```bash
         python agent/sentinel_agent.py
         ```
+    - **Self-Healing**: Integrated `HealerAgent` translates strategic findings into technical directives, which are autonomously applied to fix gating issues, weight adjustments, and threshold tuning.
     - **Direct Feedback**: The agent writes to `config/sentinel_directive.json`. The bot reads this to perform "Strategic Resets" or adjust confidence floors mid-day.
     - **Strategy Auditing**: If the Sentinel flags "Strategic Stagnation," it means the bot's parameter tuning is not producing trades. Review `logs/control_audit_log.jsonl` for details.
 
@@ -76,6 +82,10 @@ The following evidence highlights the technical depth and operational transparen
 #### 09 - Continuous Learning: Alpha Optimizer
 ![Alpha Optimizer](docs/portfolio_images/09_alpha_optimizer.png)
 *The Alpha Optimizer screen showing the bot's ability to learn from recent performance and adjust its operational plan.*
+
+#### 10 - Sentinel AI Auditor: Self-Healing Loop
+![Sentinel AI Auditor](docs/portfolio_images/10_sentinel_ai_auditor.png)
+*The Sentinel AI Auditor autonomously reviews trading performance, identifies strategic gaps, and generates technical fixes. This "Self-Healing Loop" enables the bot to repair its own code based on missed opportunities, ensuring continuous improvement without human intervention.*
 
 ### 🚀 The "AI Residency" Approach
 Unlike traditional development, this bot was built using **Agentic Orchestration**. As the Human Operator, I acted as the "Digital Architect," guiding multiple AI agents to solve complex engineering challenges:
