@@ -9,12 +9,22 @@ To get started with development, follow these steps:
     source venv/bin/activate
     pip install -r requirements.txt
     ```
-3.  **Environment Variables**: Copy `.env.example` to `.env` and populate your developer API keys (Alpaca Paper).
-4.  **Launch Stack**: Use Docker Compose to bring up dependencies.
+3.  **Environment Variables**: Copy `.env.example` to `.env` and populate your developer API keys:
+    - **Trading APIs**: Alpaca (paper trading), IBKR credentials
+    - **Vertex AI**: Follow the [Vertex AI Setup Guide](vertex_ai_setup.md) to configure Google Cloud credentials for AI features
+    
+4.  **Vertex AI Setup (Required for AI Features)**:
+    - Complete the [Vertex AI Setup Guide](vertex_ai_setup.md) to enable:
+      - Sentinel agent (autonomous monitoring)
+      - News analysis
+      - Strategic AI recommendations
+      - Thematic research
+    
+5.  **Launch Stack**: Use Docker Compose to bring up dependencies.
     ```bash
     docker-compose up -d prometheus loki grafana
     ```
-5.  **Broker Prerequisites**:
+6.  **Broker Prerequisites**:
     -   **Alpaca**: Paper trading API keys generated.
     -   **IBKR**: **IB Gateway** or **TWS** installed and logged in on the same network.
         -   Enable "ActiveX and Socket Clients" in API Settings.
@@ -49,6 +59,8 @@ We use a simplified **Gitflow** model:
 6.  **PR**: Open a Pull Request against the `develop` branch. Tag @Gary for review.
 
 ## 6. Resources
+-   **Vertex AI Setup Guide**: [Vertex AI Setup](vertex_ai_setup.md)
 -   **Alpaca API Documentation**: [https://alpaca.markets/docs/](https://alpaca.markets/docs/)
 -   **XGBoost Documentation**: [https://xgboost.readthedocs.io/](https://xgboost.readthedocs.io/)
+-   **Google Cloud Vertex AI**: [https://cloud.google.com/vertex-ai/docs](https://cloud.google.com/vertex-ai/docs)
 -   **Mermaid Live Editor**: For updating architecture diagrams in documentation.

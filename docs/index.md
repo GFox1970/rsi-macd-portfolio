@@ -10,7 +10,7 @@ Our mission is to eliminate emotional bias from trading by automating the entire
 
 ## 3. High-Level Architecture
 The system is divided into three primary tiers:
-1.  **Tier 1 (Daily Orchestrator)**: Prepares the battlefield (models, candidates, targets) and handles cloud archiving.
+1.  **Tier 1 (Daily Orchestrator)**: Prepares the battlefield (models, candidates, targets) and scales experience via the **Accelerated Learning Universe (ALU)**.
 2.  **Tier 2 (Intraday Engine)**: The continuous market loop evaluating signals, surviving volatility, and executing trades.
 3.  **Tier 3 (AI Intelligence Layer)**: Real-time sentiment analysis, thematic rotation, and strategic appetite tuning.
 
@@ -28,11 +28,15 @@ This document serves as the hub for the following specialized guides:
 | [Testing Strategy Document](testing_strategy.md) | Unit, integration, and E2E testing workflows. |
 | [Deployment & Release Guide](deployment_guide.md) | Versioning and rollout/rollback procedures. |
 | [Support & Maintenance Guide](maintenance_guide.md) | Troubleshooting, monitoring, and operational runbooks. |
+| [ML Strategy & Performance Analysis](ml_strategy_analysis.md) | Overview of XGBoost architecture, gated scaling, and performance efficiency metrics. |
+| [ML Operational Lifecycle (ALU)](ml_operational_lifecycle.md) | Deep dive into the Accelerated Learning Universe (ALU) and global multi-market handoff logic. |
+| [Vertex AI Setup Guide](vertex_ai_setup.md) | Complete guide for configuring Google Cloud Vertex AI authentication and quotas. |
 | [Developer Onboarding Guide](onboarding_guide.md) | Local setup, coding standards, and contribution guide. |
 
 ## 5. Security & Observability
 -   **Security**: Minimalist attack surface with secrets managed via GitHub vault and environment-level isolation.
 -   **Observability**: Real-time health monitoring via Streamlit, featuring the "Management Insight" audit trail for full decision transparency.
+-   **Self-Healing (Sentinel SRE)**: An autonomous AI agent scans logs every 4 hours to fix technical errors and flag strategic stagnation, ensuring the bot's "thinking" remains sharp.
 
 ## 6. Future Roadmap
 -   **Enhanced Option Strategies**: Automated hedging using put/call options during Survival Mode.

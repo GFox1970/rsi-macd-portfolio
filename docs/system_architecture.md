@@ -11,12 +11,15 @@ graph TB
         A -->|2. Auto-Tuning| C[Adaptive Optimizer]
         A -->|3. Strategic Analysis| D[AI Strategic Agent]
         A -->|4. ML Retraining| E[ML Pipeline]
-        A -->|5. Sentinel Pulse| SENT[Sentinel Agent]
-        A -->|6. Healer Pulse| HEAL[HealerAgent]
-        A -->|7. Targets| F[Candidate Selector]
-        A -->|8. Cleanup| G[Log Rotator]
-        A -->|9. Cloud Sync| H[Data Archiver / rclone]
-        SENT -->|Strategic Gaps| HEAL
+        A -->|5. Targets| F[Candidate Selector]
+        A -->|6. Cleanup| G[Log Rotator]
+        A -->|7. Cloud Sync| H[Data Archiver / rclone]
+    end
+
+    subgraph "Tier 4: Sentinel SRE (Continuous Audit)"
+        W[Sentinel Agent] -->|Analyze| X{Log Sources}
+        X -->|Diagnose| Y[Autonomous Fixes]
+        W -->|Report| Z[Health Report]
     end
 
     subgraph "Tier 2: Intraday Runtime (Docker/Systemd)"
@@ -62,6 +65,11 @@ graph TB
     - **Exits**: `ExitEvaluator` tracks parabolic moves via High-Water Marks, implementing trailing stops and reversal-detection to maximize capture.
 3.  **Archiving & Rotation**:
     - Rotated logs and historical CSVs are zipped and shipped to Google Drive monthly via `rclone`.
+
+4.  **Autonomous Healing (T4)**:
+    - **Sentinel Agent**: Periodically scans `trading_bot.log`, `orchestrator.log`, and `control_audit_log.jsonl`.
+    - **Strategic Feedback**: Communicates directly with Tier 2 via `sentinel_directive.json` to force parameter resets or adjust entry confidence floors when stagnation is detected.
+    - **Self-Correction**: Implements technical fixes and flags strategic stagnation to the Human Operator.
 
 ## 4. Service Boundaries
 -   **Broker Router**: Unified interface for Alpaca (US), IBKR (Global), and CCXT (Crypto).
