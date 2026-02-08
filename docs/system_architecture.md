@@ -16,9 +16,15 @@ graph TB
         A -->|7. Cloud Sync| H[Data Archiver / rclone]
     end
 
-    subgraph "Tier 4: Sentinel SRE (Continuous Audit)"
+    subgraph "Tier 4: Sentinel SRE (Continuous Audit & Auto-Repair)"
         W[Sentinel Agent] -->|Analyze| X{Log Sources}
-        X -->|Diagnose| Y[Autonomous Fixes]
+        X -->|Diagnose| Y[Healer Agent]
+        Y -->|Phase 1: Generate| Y1[Technical Directives]
+        Y -->|Phase 2: Auto-Execute| Y2[Code Fixes]
+        Y2 -->|Git Branch| Y3[Isolated Changes]
+        Y2 -->|Validate| Y4[Syntax Check]
+        Y4 -->|Success| Y5[Update Status: COMPLETED]
+        Y4 -->|Failure| Y6[Rollback + FAILED]
         W -->|Report| Z[Health Report]
     end
 
@@ -68,8 +74,18 @@ graph TB
 
 4.  **Autonomous Healing (T4)**:
     - **Sentinel Agent**: Periodically scans `trading_bot.log`, `orchestrator.log`, and `control_audit_log.jsonl`.
-    - **Strategic Feedback**: Communicates directly with Tier 2 via `sentinel_directive.json` to force parameter resets or adjust entry confidence floors when stagnation is detected.
-    - **Self-Correction**: Implements technical fixes and flags strategic stagnation to the Human Operator.
+    - **Strategic Feedback**: Communicates directly with Tier 2 via `sentinel_feedback.json` to force parameter resets or adjust entry confidence floors when stagnation is detected.
+    - **Healer Agent (Phase 2 - Auto-Execution)**:
+        - **Directive Generation**: Translates Sentinel findings into actionable code-level directives with target files and step-by-step instructions.
+        - **Auto-Execution Pipeline**: Executes approved directives (`can_auto_apply: true`) automatically during orchestrator runs.
+        - **Priority-Based Scheduling**: CRITICAL directives execute immediately; WARNING/ERROR directives execute at 22:30 UTC (non-trading hours).
+        - **Safety Mechanisms**: 
+            - Git branch isolation (`healer/auto-fix-{SYMBOL}-{TIMESTAMP}`)
+            - Python syntax validation before committing
+            - Automatic rollback on failures
+            - Manual approval gate for high-risk changes
+        - **Audit Trail**: All executions logged to `healer_history.jsonl` with status (PENDING_EXECUTION → COMPLETED/FAILED), timestamps, execution logs, and git commit references.
+        - **Dashboard Integration**: Execution status, logs, and commit messages visible in Health & Audit tab.
 
 ## 4. Service Boundaries
 -   **Broker Router**: Unified interface for Alpaca (US), IBKR (Global), and CCXT (Crypto).
@@ -82,7 +98,7 @@ graph TB
 -   **Language**: Python 3.10+
 -   **Infrastructure**: Hetzner Dedicated VM (Linux), Systemd (Process monitoring).
 -   **Database**: SQLite (`capital_alloc.db`, `ml_features.db`), JSONL (Decision Audit).
--   **ML Framework**: XGBoost (Gating), OpenAI (News/Thematic Analysis).
+-   **ML Framework**: XGBoost (Gating), Vertex AI/Gemini (News/Thematic Analysis, Sentinel Audits, Healer Auto-Repair).
 -   **Broker APIs**: Alpaca-py, IBKR Gateway (Portal/API), CCXT.
 -   **Utilities**: `rclone` (Cloud Sync), `zip` (Log bundling).
 

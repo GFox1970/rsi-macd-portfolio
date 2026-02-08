@@ -108,12 +108,62 @@ If the bot is stuck in "Survival Mode" because of a stale macro state:
 
 ### 4.6 Sentinel SRE & Self-Healing
 Phase 3.5 introduced the Sentinel Agent for autonomous maintenance:
-- **Automation**: Runs every 4 hours via GitHub Actions (`monitor-health.yml`).
+- **Automation**: Runs nightly via `daily_orchestrator.py` (scheduled at 22:30 UTC).
 - **Activity Log**: `logs/sentinel_activity.jsonl` tracks all agent findings and actions.
-- **Health Report**: `weekly_analysis/sentinel_health_report.md` provides a human-readable summary.
+- **Health Report**: Available in the Dashboard under Health & Audit → Sentinel Audits.
 - **Manual Run**:
     ```bash
     python agent/sentinel_agent.py
     ```
-- **Direct Feedback**: The agent communicates via `config/sentinel_directive.json`. If the bot is behaving unexpectedly (e.g., ignoring entries), check if the Sentinel has issued a "Strategic Reset" directive.
+- **Direct Feedback**: The agent communicates via `data/sentinel_feedback.json`. If the bot is behaving unexpectedly (e.g., ignoring entries), check if the Sentinel has issued a "Strategic Reset" directive.
 - **Strategy Auditing**: If the Sentinel flags "Strategic Stagnation," it means the bot's parameter tuning is not producing trades. Review `logs/control_audit_log.jsonl` for details.
+
+### 4.7 Healer Auto-Execution (Phase 2)
+The Healer Agent autonomously applies code fixes based on Sentinel findings:
+
+**How It Works**:
+1. Sentinel identifies performance gaps (e.g., missed opportunities)
+2. Healer generates technical directives with code-level fixes
+3. Directives marked `can_auto_apply: true` execute automatically
+4. Each fix is isolated in a git branch for safety
+
+**Monitoring Execution**:
+- **Dashboard**: View execution status in Health & Audit → Healer Directives tab
+  - ⏳ Queued: Pending manual approval or scheduled execution
+  - ✅ Executed: Successfully applied with git branch and logs
+  - ❌ Failed: Execution failed with error details and rollback
+- **Activity Logs**: `logs/healer_history.jsonl` contains complete execution history
+- **Active Directives**: `data/healer_active_directives.json` lists pending fixes
+
+**Execution Schedule**:
+- **CRITICAL** severity: Executes immediately during next orchestrator run
+- **WARNING/ERROR** severity: Executes at 22:30 UTC (non-trading hours)
+
+**Manual Intervention**:
+If a directive is marked `can_auto_apply: false` or you want to review before execution:
+1. View the directive in Dashboard → Healer Directives
+2. Review the proposed fix instructions
+3. Manually apply the changes or update `can_auto_apply` to `true`
+4. Next orchestrator run will execute approved directives
+
+**Rollback Failed Executions**:
+If an execution fails (syntax error, validation failure):
+1. Check `logs/healer_history.jsonl` for error details
+2. The system automatically rolls back to main branch
+3. Review failure log in Dashboard → Healer Directives → View Failure Log
+4. Fix the underlying issue and Healer will retry in next cycle
+
+**Git Branch Management**:
+- Auto-execution creates branches: `healer/auto-fix-{SYMBOL}-{TIMESTAMP}`
+- Successful executions leave the branch for review
+- Failed executions automatically delete the branch
+- Manually clean up old branches:
+    ```bash
+    git branch | grep healer/auto-fix | xargs git branch -D
+    ```
+
+**Troubleshooting**:
+- **Directive stays in PENDING_EXECUTION**: Check `can_auto_apply` flag and execution schedule
+- **Execution fails repeatedly**: Review syntax validation errors in failure log
+- **No directives generated**: Verify Sentinel is finding performance gaps in `sentinel_feedback.json`
+- **Vertex AI errors**: Check service account permissions for Gemini API access

@@ -107,7 +107,6 @@ enhanced_decision_log.jsonl (logs every decision: BUY/SELL/SKIP)
 
 **LLM Integration**:
 - **Vertex AI (Gemini)**: Used by HealerAgent to analyze Sentinel findings and generate technical directives (e.g., "Adjust VOLATILE mode weights in `trading_agent.py` to prioritize technical_score > 0.85")
-- **Antigravity AI Agent**: Can be invoked (manually or via future automation) to apply directives by editing code, running tests, and committing fixes
 - **Token Management**: Vertex AI requests are rate-limited; HealerAgent includes retry logic and fallback to manual directive creation
 
 **Directive Structure**:
@@ -118,14 +117,36 @@ Each directive includes:
 - `fix`: Step-by-step repair instructions
 - `verification_plan`: How to validate the fix
 - `can_auto_apply`: Boolean flag for safe automation
+- `severity`: CRITICAL (immediate) | WARNING/ERROR (22:30 UTC execution)
+- `addresses_audits`: List of audit references this fix remediates
+
+**Phase 2 - Auto-Execution (NEW)**:
+- **Auto-Execution Pipeline**: Directives with `can_auto_apply: true` are automatically executed during orchestrator runs
+- **Priority-Based Scheduling**: 
+    - CRITICAL severity → Execute immediately
+    - WARNING/ERROR severity → Execute at 22:30 UTC (non-trading hours)
+- **Safety Mechanisms**:
+    - **Git Branch Isolation**: Each fix creates a branch `healer/auto-fix-{SYMBOL}-{TIMESTAMP}`
+    - **Syntax Validation**: Python files validated via `compile()` before committing
+    - **Automatic Rollback**: Failed executions trigger branch deletion and status update to FAILED
+    - **Manual Approval Gate**: High-risk changes require `can_auto_apply: false`
+- **Audit Trail**: Full execution history in `logs/healer_history.jsonl`:
+    - Status transitions: PENDING_EXECUTION → COMPLETED/FAILED
+    - Execution timestamps and duration
+    - Git branch name and commit message
+    - Execution logs (step-by-step)
+    - Linked audit status updates (PENDING_AUDIT → COMPLETED)
 
 ### 🎯 Integration Points
 - **Daily Orchestrator**: Runs the complete learning cycle nightly
   1. ML Pipeline retraining
   2. Sentinel Pulse (performance audit)
-  3. Healer Pulse (directive generation)
+  3. Healer Pulse (directive generation + auto-execution)
 - **Live Trading**: Applies learned improvements in real-time
-- **Dashboard**: Displays all decision logs and audit results
+- **Dashboard**: Displays all decision logs, audit results, and Healer execution status
+  - Execution logs viewer
+  - Git branch and commit information
+  - Status badges (⏳ Queued | ✅ Executed | ❌ Failed)
 
 ### 📋 Deprecated Components
 - **monitor-health.yml (4-hour GitHub Actions workflow)**: Archived as redundant. The integrated nightly pulse in `daily_orchestrator.py` provides superior timing and automation.
