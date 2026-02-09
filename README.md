@@ -10,7 +10,7 @@ A fully autonomous, machine-learning-enhanced trading system designed for consis
 - **Cloud Archiving**: Automated monthly data shipping to Google Drive via `rclone`.
 - **Management Insight**: High-fidelity JSONL decision logs displayed in a premium Streamlit dashboard.
 - **Multi-Broker**: Unified routing for Alpaca (US), IBKR (Global), and Crypto.
-- **Sentinel SRE & Healer Agent**: Autonomous health monitoring and "Self-Healing" agent that identifies gaps and automatically applies code repairs overnight via a secure VM-to-GitHub pipeline.
+- **Sentinel SRE & Healer Agent**: Autonomous health monitoring and "Self-Healing" agent that identifies gaps, generates fixes, and **automatically applies code repairs** overnight via a secure VM-to-GitHub pipeline.
 
 ## 📂 Documentation Hub
 For detailed guides, please refer to the `docs/` folder:
@@ -84,8 +84,47 @@ Unlike traditional development, this bot was built using **Agentic Orchestration
    ```
 4. **Docker Deployment**:
    ```bash
-   ./deploy_compose.sh up -d
    ```
+   
+## 🚀 Deployment Workflow (The "Gold Standard")
+
+We follow a strict **Local → GitHub → VM** workflow to ensure consistency and reliability.
+
+### 1. Code Changes (Local)
+*   **Action**: Edit code, update configurations, or modify prompts locally.
+*   **Command**:
+    ```bash
+    git add .
+    git commit -m "feat: description of changes"
+    git push origin main
+    ```
+*   **Result**: GitHub Actions automatically builds the Docker images and pushes them to the registry. **Watchman** or **Cron** on the VM pulls these new images and restarts the containers.
+
+### 2. Configuration Changes (VM)
+*   **Scope**: Only for environment variables (`.env`) or one-off maintenance scripts not tracked in git.
+*   **Action**: SSH into the VM and edit files directly.
+    ```bash
+    nano .env
+    # Restart containers to apply env changes
+    docker compose up -d
+    ```
+
+### 3. Autonomous Repair (Healer)
+*   **Source**: The **Healer Agent** on the VM identifies a fix.
+*   **Action**: 
+    1. Healer applies the fix to a new git branch.
+    2. Healer validates syntax and auto-merges to `main` (if `can_auto_apply: true`).
+    3. Healer pushes the change to GitHub.
+*   **Result**: The loop closes. You (the human) `git pull` locally to see the fix that the bot wrote for itself.
+
+### ⚠️ IMPORTANT: Avoid Manual Processes
+**Do not** run long-lived processes (like `streamlit run ...` or `python3 trading_bot.py`) manually on the VM using `nohup` or `screen`.
+*   **Why?**: These manual processes block network ports (e.g., 8501) and prevent the automated Docker deployment from starting.
+*   **Fix**: If you accidentally start a manual process, kill it:
+    ```bash
+    pkill -f streamlit
+    docker compose up -d
+    ```
 
 ## 📊 Operational Flow (VM-Local Cron)
 The bot operates in a daily cycle managed by the `DailyOrchestrator` running directly on the Hetzner VM:

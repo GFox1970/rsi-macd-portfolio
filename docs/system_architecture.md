@@ -16,16 +16,16 @@ graph TB
         A -->|7. Cloud Sync| H[Data Archiver / rclone]
     end
 
-    subgraph "Tier 4: Sentinel SRE (Continuous Audit & Auto-Repair)"
-        W[Sentinel Agent] -->|Analyze| X{Log Sources}
-        X -->|Diagnose| Y[Healer Agent]
-        Y -->|Phase 1: Generate| Y1[Technical Directives]
-        Y -->|Phase 2: Auto-Execute| Y2[Code Fixes]
-        Y2 -->|Git Branch| Y3[Isolated Changes]
-        Y2 -->|Validate| Y4[Syntax Check]
-        Y4 -->|Success| Y5[Update Status: COMPLETED]
-        Y4 -->|Failure| Y6[Rollback + FAILED]
-        W -->|Report| Z[Health Report]
+    subgraph "Tier 4: Sentinel SRE (Self-Healing Loop)"
+        W[Sentinel Agent] -->|1. Detect Gap| X{Log Sources}
+        X -->|2. Diagnose| Y[Healer Agent]
+        Y -->|3. Generate Fix| Y1[Technical Directives]
+        Y1 -->|4. Auto-Apply| Y2[Code Patcher]
+        Y2 -->|5. Verify| Y3{Syntax Check}
+        Y3 -->|Pass| Y4[Commit & Push]
+        Y3 -->|Fail| Y5[Revert & Log Error]
+        Y4 -->|6. Close Loop| Y6[Repo Updated]
+        W -->|Report| Z[Health Dashboard]
     end
 
     subgraph "Tier 2: Intraday Runtime (Docker/Systemd)"
@@ -76,17 +76,15 @@ graph TB
 4.  **Autonomous Healing (T4)**:
     - **Sentinel Agent**: Periodically scans `trading_bot.log`, `orchestrator.log`, and `control_audit_log.jsonl`.
     - **Strategic Feedback**: Communicates directly with Tier 2 via `sentinel_feedback.json` to force parameter resets or adjust entry confidence floors when stagnation is detected.
-    - **Healer Agent (Phase 2 - Auto-Execution)**:
-        - **Directive Generation**: Translates Sentinel findings into actionable code-level directives with target files and step-by-step instructions.
+    - **Healer Agent (Autonomous Repair)**:
+        - **Directive Generation**: Translates Sentinel findings into actionable code-level directives.
         - **Auto-Execution Pipeline**: Executes approved directives (`can_auto_apply: true`) automatically during orchestrator runs.
-        - **Priority-Based Scheduling**: CRITICAL directives execute immediately; WARNING/ERROR directives execute at 22:30 UTC (non-trading hours).
+        - **Closed-Loop Repair**: Changes are committed, pushed to the repository, and immediately active on the next run.
         - **Safety Mechanisms**: 
             - Git branch isolation (`healer/auto-fix-{SYMBOL}-{TIMESTAMP}`)
-            - Python syntax validation before committing
+            - Python syntax validation prior to commit
             - Automatic rollback on failures
-            - Manual approval gate for high-risk changes
-        - **Audit Trail**: All executions logged to `healer_history.jsonl` with status (PENDING_EXECUTION → COMPLETED/FAILED), timestamps, execution logs, and git commit references.
-        - **Dashboard Integration**: Execution status, logs, and commit messages visible in Health & Audit tab.
+        - **Audit Trail**: Full traceability from detection to fix in `healer_history.jsonl`.
 
 ## 4. Service Boundaries
 -   **Broker Router**: Unified interface for Alpaca (US), IBKR (Global), and CCXT (Crypto).
