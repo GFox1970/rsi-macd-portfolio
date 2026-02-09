@@ -6,7 +6,7 @@ The Trading Bot follows a **3-Tier Orchestrated Architecture** designed for high
 ## 2. Component Diagram
 ```mermaid
 graph TB
-    subgraph "Tier 1: Daily Orchestrator (Cron)"
+    subgraph "Tier 1: VM-Local Orchestrator (Cron)"
         A[Daily Orchestrator] -->|1. Post-Mortem| B[Performance Analyzer]
         A -->|2. Auto-Tuning| C[Adaptive Optimizer]
         A -->|3. Strategic Analysis| D[AI Strategic Agent]
@@ -59,8 +59,9 @@ graph TB
 ```
 
 ## 3. Data Flows
-1.  **Overnight Prep (T1)**:
-    - **Post-Mortem**: Analyzes yesterday's trades to find "Efficiency Gaps".
+62: 1.  **Overnight Prep (T1 - VM Local)**:
+63:     - **Automation**: Triggered via VM-local Cron jobs to save GitHub Action minutes.
+64:     - **Post-Mortem**: Analyzes yesterday's trades to find "Efficiency Gaps".
     - **Optimization**: Retunes RSI/MACD parameters based on recent performance.
     - **Strategic Agent**: Generates a high-level `strategic_plan.json` (Risk Multiplier & Bias).
     - **Training**: Retrains XGBoost on new outcomes.
