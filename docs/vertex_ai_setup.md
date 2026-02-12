@@ -64,7 +64,7 @@ The JSON key file will download automatically (e.g., `trading-bot-vertex-ai-xxxx
    # Vertex AI Configuration
    GOOGLE_CLOUD_PROJECT=gen-lang-client-0536875321
    GOOGLE_APPLICATION_CREDENTIALS=/app/config/vertex-ai-key.json
-   VERTEX_AI_LOCATION=europe-west1
+   VERTEX_AI_LOCATION=global
    
    # Optional: Keep for backward compatibility during testing
    # GOOGLE_API_KEY=your-old-ai-studio-key
@@ -99,7 +99,7 @@ The JSON key file will download automatically (e.g., `trading-bot-vertex-ai-xxxx
    ```bash
    GOOGLE_CLOUD_PROJECT=gen-lang-client-0536875321
    GOOGLE_APPLICATION_CREDENTIALS=/app/config/vertex-ai-key.json
-   VERTEX_AI_LOCATION=europe-west1
+   VERTEX_AI_LOCATION=global
    ```
 
 3. **Set proper permissions**:
@@ -174,7 +174,7 @@ Default Vertex AI quotas may still be too low for heavy batch operations.
 cd ~/rsi-macd-bot
 export GOOGLE_CLOUD_PROJECT=gen-lang-client-0536875321
 export GOOGLE_APPLICATION_CREDENTIALS=$PWD/config/vertex-ai-key.json
-export VERTEX_AI_LOCATION=europe-west1
+export VERTEX_AI_LOCATION=global
 
 # Test the Vertex AI client
 python -c "from trading_bot.core.vertex_ai_client import VertexAIClient; c = VertexAIClient(); print('Available:', c.available)"
@@ -182,7 +182,7 @@ python -c "from trading_bot.core.vertex_ai_client import VertexAIClient; c = Ver
 
 Expected output:
 ```
-✅ Vertex AI initialized: gemini-2.0-flash-001 (project=gen-lang-client-0536875321, location=europe-west1)
+✅ Vertex AI initialized: gemini-2.0-flash-001 (project=gen-lang-client-0536875321, location=global)
 Available: True
 ```
 

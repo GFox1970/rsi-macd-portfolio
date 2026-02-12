@@ -41,6 +41,7 @@ graph TB
         P[XGBoost Gating Model]
         Q[Thematic Manager]
         R[Macro Analyzer]
+        P1[AI Intraday Pilot]
     end
 
     subgraph "External Systems"
@@ -52,10 +53,13 @@ graph TB
     J -->|Inference| P
     J -->|Sentiment| O
     J -->|Macro Regime| R
+    L -->|Tactical Conviction| P1
     N -->|Orders| S
     K -->|Market Techs| T
     H -->|ZIP Archives| U
     J -->|Audit Trail| V[JSONL Decision Log]
+    C -->|Auto-Tuning| J
+
 ```
 
 ## 3. Data Flows
@@ -66,10 +70,11 @@ graph TB
     - **Strategic Agent**: Generates a high-level `strategic_plan.json` (Risk Multiplier & Bias).
     - **Training**: Retrains XGBoost on new outcomes.
 2.  **Market Execution (T2)**:
+    - **Live Learning (Agility)**: `TradingBot` performs `_reload_config()` per loop to pick up Tier 1 optimizations (Adaptive Optimizer) without restart.
     - **Signals**: Bot calculates tech indicators and fetches macro regime via `MacroAnalyzer`.
     - **Sizing**: `CapitalAllocationManager` applies fee-aware sizing (MVC). Track A trades are boosted only if ML Score >= 0.75.
     - **Survival**: If `VIX > 40`, the bot enters Survival Mode, blocking new buys.
-    - **Exits**: `ExitEvaluator` tracks parabolic moves via High-Water Marks, implementing trailing stops and reversal-detection to maximize capture.
+    - **Exits**: `ExitEvaluator` consults the **AI Intraday Pilot** (T3) for tactical conviction. This allows the bot to widen trailing stops for "blow-off tops" or tighten them during trend stalling.
 3.  **Archiving & Rotation**:
     - Rotated logs and historical CSVs are zipped and shipped to Google Drive monthly via `rclone`.
 
