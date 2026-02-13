@@ -63,12 +63,13 @@ graph TB
 ```
 
 ## 3. Data Flows
-62: 1.  **Overnight Prep (T1 - VM Local)**:
-63:     - **Automation**: Triggered via VM-local Cron jobs to save GitHub Action minutes.
-64:     - **Post-Mortem**: Analyzes yesterday's trades to find "Efficiency Gaps".
-    - **Optimization**: Retunes RSI/MACD parameters based on recent performance.
-    - **Strategic Agent**: Generates a high-level `strategic_plan.json` (Risk Multiplier & Bias).
-    - **Training**: Retrains XGBoost on new outcomes.
+1.  **Overnight Prep (Split Architecture)**:
+    - **Step 1: Data Fetch (GHA - 21:30 UTC)**: GitHub Action (`scheduled-orchestrator.yml`) fetches global daily/intraday data using 2 workers + Chrome impersonation to avoid rate limits. Artifacts are uploaded to VM via SSH.
+    - **Step 2: Execution (VM - 22:30 UTC)**: VM Orchestrator wakes up, detects fresh data (skips fetch), and executes:
+        - **Post-Mortem**: Analyzes yesterday's trades.
+        - **Optimization**: Retunes RSI/MACD parameters.
+        - **Strategic Agent**: Generates `strategic_plan.json`.
+        - **Training**: Retrains XGBoost on new outcomes.
 2.  **Market Execution (T2)**:
     - **Live Learning (Agility)**: `TradingBot` performs `_reload_config()` per loop to pick up Tier 1 optimizations (Adaptive Optimizer) without restart.
     - **Signals**: Bot calculates tech indicators and fetches macro regime via `MacroAnalyzer`.
