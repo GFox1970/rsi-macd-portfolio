@@ -98,7 +98,11 @@ graph TB
 ## 4. Service Boundaries
 -   **Broker Router**: Unified interface for Alpaca (US), IBKR (Global), and CCXT (Crypto).
 -   **Strategic Judgement Layer**: Decoupled module that combines ML scores, news sentiment, and macro bias. Includes **Strict Schema Gating** to block invalid data.
--   **Exit Evaluator**: Responsible for same-day and overnight exit logic, featuring trailing profit protection and PDT-optimized reversal exits.
+-   **Exit Evaluator**: Responsible for same-day and overnight exit logic. Features a **"Grip & Harvest" (ADR Capture)** strategy: 
+    - **Ultra-Aggressive Entry**: Buy buffers as low as 0.02% to ensure execution.
+    - **Dynamic Harvesting**: Targets 75% of the symbol's ADR move for profit taking.
+    - **Big Bang Caps**: Sets 1.5x ADR limit orders as high-water mark protection.
+    - **AI Pilot Integration**: Consults the AI Intraday Pilot for tactical conviction and trailing stop adjustments.
 -   **Decision Logger**: Thread-safe JSONL persistence for the "Management Insight" dashboard.
 -   **Data Archiver**: Stateless wrapper around `rclone` for cloud synchronization.
 
