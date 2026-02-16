@@ -30,7 +30,7 @@ This project is a flagship demonstration of **AI Residency (AIR)** — the next-
 
 The following evidence highlights the technical depth and operational transparency achieved through this human-agent partnership.
 
-
+````carousel
 ![01 - Global Strategy & Exposure](docs/portfolio_images/01_dashboard_overview.png)
 **Control Center**: The multi-broker dashboard provides a high-level view of portfolio intelligence, equity curves, and real-time P&L tracking across Alpaca and IBKR.
 <!-- slide -->
@@ -57,7 +57,7 @@ The following evidence highlights the technical depth and operational transparen
 <!-- slide -->
 ![09 - Alpha Optimizer](docs/portfolio_images/09_alpha_optimizer.png)
 **Closed-Loop Learning**: The Alpha Optimizer screen showing the bot's ability to learn from recent performance and adjust its operational plan for maximum ROCE.
-
+````
 
 ### � The "AI Residency" Approach
 Unlike traditional development, this bot was built using **Agentic Orchestration**. As the Human Operator, I acted as the "Digital Architect," guiding multiple AI agents to solve complex engineering challenges:

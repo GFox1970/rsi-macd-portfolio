@@ -14,6 +14,7 @@ graph TB
         A -->|5. Targets| F[Candidate Selector]
         A -->|6. Cleanup| G[Log Rotator]
         A -->|7. Cloud Sync| H[Data Archiver / rclone]
+        A -->|8. Shadow Results| HR[Shadow Result Tracker]
     end
 
     subgraph "Tier 4: Sentinel SRE (Self-Healing Loop)"
@@ -57,8 +58,9 @@ graph TB
     N -->|Orders| S
     K -->|Market Techs| T
     H -->|ZIP Archives| U
-    J -->|Audit Trail| V[JSONL Decision Log]
     C -->|Auto-Tuning| J
+    J -->|Audit Trail| V[JSONL Decision Log]
+    HR -->|Backfill Skipped| V
 
 ```
 
@@ -73,9 +75,10 @@ graph TB
 2.  **Market Execution (T2)**:
     - **Live Learning (Agility)**: `TradingBot` performs `_reload_config()` per loop to pick up Tier 1 optimizations (Adaptive Optimizer) without restart.
     - **Signals**: Bot calculates tech indicators and fetches macro regime via `MacroAnalyzer`.
-    - **Sizing**: `CapitalAllocationManager` applies fee-aware sizing (MVC). Track A trades are boosted only if ML Score >= 0.75.
+    - **Sizing**: `CapitalRiskManager` applies fee-aware sizing (MVC) and enforces dynamic portfolio/symbol exposure caps (e.g., 90% total / 10% per symbol) rather than hard position counts.
     - **Survival**: If `VIX > 40`, the bot enters Survival Mode, blocking new buys.
-    - **Exits**: `ExitEvaluator` consults the **AI Intraday Pilot** (T3) for tactical conviction. This allows the bot to widen trailing stops for "blow-off tops" or tighten them during trend stalling.
+    - **Exits**: `ExitEvaluator` consults the **AI Intraday Pilot** (T3) for tactical conviction.
+    - **Opportunity Cost**: `ShadowResultTracker` (T1) monitors skipped trades in the decision log and backfills real-world outcomes to ensure the ML model can learn from missed opportunities.
 3.  **Archiving & Rotation**:
     - Rotated logs and historical CSVs are zipped and shipped to Google Drive monthly via `rclone`.
 
