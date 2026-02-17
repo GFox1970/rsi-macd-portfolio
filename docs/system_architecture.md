@@ -65,12 +65,15 @@ graph TB
 ```
 
 ## 3. Data Flows
-1.  **Overnight Prep (Split Architecture)**:
-    - **Step 1: Data Fetch (GHA - 21:30 UTC)**: GitHub Action (`scheduled-orchestrator.yml`) fetches global daily/intraday data using 2 workers + Chrome impersonation to avoid rate limits. Artifacts are uploaded to VM via SSH.
-    - **Step 2: Execution (VM - 22:30 UTC)**: VM Orchestrator wakes up, detects fresh data (skips fetch), and executes:
-        - **Post-Mortem**: Analyzes yesterday's trades.
-        - **Optimization**: Retunes RSI/MACD parameters.
-        - **Strategic Agent**: Generates `strategic_plan.json`.
+1.  **Orchestrated Prep (Push Architecture)**:
+    - **Step 1: Data Fetch (GHA - 4x Daily)**: GitHub Action (`scheduled-orchestrator.yml`) runs at `06:30`, `12:30`, `17:30`, and `22:30` UTC. It fetches global market data and refreshes the symbol universe.
+    - **Step 2: Sync & Trigger (GHA -> VM)**: After data harvesting, GHA synchronization:
+        - Uploads fresh historical CSVs and JSON reports.
+        - Syncs `data/.orchestrator_progress.json` to inform the VM of completed tasks.
+        - Sends a remote SSH trigger to initiate the VM's execution phase immediately.
+    - **Step 3: Intelligence Execution (VM)**: VM Orchestrator detects the GHA trigger (and the progress file), skips harvesting, and executes:
+        - **Post-Mortem**: Analyzes trade outcomes.
+        - **AI Strategic Agent**: Generates `strategic_plan.json`.
         - **Training**: Retrains XGBoost on new outcomes.
 2.  **Market Execution (T2)**:
     - **Live Learning (Agility)**: `TradingBot` performs `_reload_config()` per loop to pick up Tier 1 optimizations (Adaptive Optimizer) without restart.
