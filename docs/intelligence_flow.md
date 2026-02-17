@@ -24,44 +24,46 @@ This document outlines the end-to-end lifecycle of a stock ticker within the rsi
 graph TD
     A["Candidate List Loaded"] --> B{"Macro Guard"}
     B -- "VIX > 40 or Systemic Crash" --> C["BLOCK: Market Freeze"]
-    B -- "VIX < 40" --> D{"Strategic Agent"}
+    B -- "VIX < 40" --> D{"Confidence Layer"}
     
-    D -- "Confidence < Threshold (0.45)" --> E["SKIP: Low Conviction"]
-    D -- "Confidence >= 0.45" --> F{"Target Layer (The Dip)"}
+    D -- "Dynamic Floor (0.38 - 0.45)" --> E{"Strategic Score"}
+    E -- "Score < Floor" --> F["SKIP: Low Conviction"]
+    E -- "Score >= Floor" --> G{"Pricing Layer (Multi-Factor)"}
     
-    F -- "Current Price > Limit Target" --> G["WAIT: Pending Pullback"]
-    F -- "Price hits Limit Target" --> H{"Risk/Fee Layer (MVC)"}
+    G --> G1["ADR-Relative Dip (10% ADR)"]
+    G1 --> G2["Sector Lift/Drag Adjustment"]
+    G1 --> G3["VSA Signal Bypass (Stopping Vol)"]
     
-    H -- "Order Size < MVC" --> I["REJECT: Fee Inefficient"]
-    H -- "Order Size >= MVC" --> J["EXECUTE: Bracket Order"]
+    G -- "Current Price > Limit Target" --> H["WAIT: Pending Pullback"]
+    G -- "Price hits Limit Target" --> I{"Risk/Fee Layer (MVC)"}
     
-    J --> K["Active Monitoring"]
+    I -- "Order Size < MVC (ADR-Aware)" --> J["REJECT: Fee Inefficient"]
+    I -- "Order Size >= MVC" --> K["EXECUTE: Bracket Order"]
+    
+    K --> L["Active Management (ExitEvaluator)"]
 ```
 
 ### Key Logic Gates
 
-#### A. Strategic Agent (`_calculate_strategic_score`)
-*   **Purpose**: Determines if the "Vibe" is right for a trade.
-*   **Inputs**: Sentiment data, Technicals (RSI/MACD), Sector Rotation.
-*   **Threshold**: `min_confidence` (default: 0.45).
-*   **Reasoning**: If the score is low, the bot assumes it's "catching a falling knife" and skips.
+#### A. Confidence Layer & Dynamic Scaling
+*   **Purpose**: Adjusts the "selectivity" of the bot based on broad market volatility.
+*   **Logic**: During high VIX environments, naturally occurring sentiment and technical scores drop. To prevent total bot paralysis, the floor scales:
+    *   **VIX < 21**: Floor = 0.45 (Standard)
+    *   **VIX 21 - 27**: Floor = 0.42 (Moderate)
+    *   **VIX > 27**: Floor = 0.38 (Volatile)
 
-#### B. Target Layer (`calculate_buy_sell_targets`)
-*   **Purpose**: Calculates the **Limit Entry** price.
-*   **Logic (Current)**: Uses a static "Buffer" based on Market Regime.
-    *   **Bull**: entry = Current * (1 - 0.02%)
-    *   **Caution**: entry = Current * (1 - 0.50%)
-*   **Optimization (Planned)**: Replace static 0.5% with **ADR-Relative Pullbacks** (e.g., 10% of Daily Range) + **VSA Lift/Drag**. If VSA shows "Stopping Volume", we buy higher (0.1% dip) to ensure fill.
-
-#### C. Volume/Momentum Layers (The "Engine Room")
-*   **VSA (Volume Spread Analysis)**: Detects professional activity (Absorption/Supply Tests).
-*   **RSI/MACD**: Measures trend momentum.
-*   **Planned Integration**: These will now feed back into the Strategic Score AND the Target Price to prevent buying "dead" stocks or missing "launching" ones.
+#### B. Multi-Factor Pricing (`calculate_buy_sell_targets`)
+*   **Purpose**: Sets the precise **Limit Entry** and **Big Bang** targets.
+*   **Logic**:
+    *   **Entry Base**: Pullback target is set to **10% of the stock's ADR**.
+    *   **Sector Lift**: If the sector is leading (Score > 0.03), entry is moved up by 50% to ensure fill.
+    *   **VSA Bullishness**: If professional accumulation (Stopping Volume) is detected, the bot bypasses the dip requirement for near-market entry.
+    *   **Regime Multipliers**: Dips are expanded in Bear markets (2.0x) and tightened in Bull markets (0.2x).
 
 #### C. Fee Efficiency Gate (MVC)
-*   **Purpose**: Ensures commissions don't eat all profits.
-*   **Formula**: `(Quantity * Price) * Expected_Move_Pct > 5x to 10x Commission`.
-*   **Threshold**: Typically $2,000 for stocks with 1% volatility on IBKR.
+*   **Purpose**: Ensures commissions or FX fees don't eat more than 10% of the expected move.
+*   **Formula**: `MVC = Total Commissions / (ADR% * Net Profit Margin%)`.
+*   **Benefit**: This gate is now **ADR-Aware**. Volatile stocks have a lower dollar-minimum requirement than stable ones.
 
 ---
 
@@ -70,21 +72,18 @@ graph TD
 
 | Exit Type | Logic | Threshold |
 | :--- | :--- | :--- |
-| **Big Bang** | Fixed Limit Order | 1.5x ADR (e.g., +6% target) |
-| **Harvest** | Adaptive Trailing Stop | Triggers at ~15% of ADR move. retraces at 5% of ADR. |
-| **Hard Stop** | Stop Loss | 2% from entry or 75% of ADR. |
-| **End of Day** | Time-based Close | 15:55 ET (if configured to avoid PDT). |
+| **Big Bang** | Dynamic Limit Order | **1.5x ADR** (Default) |
+| **VSA Climax** | Bearish Absorption Detection | Tightens "Big Bang" target by **50%** for immediate harvest. |
+| **Harvest** | Adaptive Trailing Stop | Triggers at **15% of ADR** move, trails at **5% of ADR**. |
+| **Vol-Aware Stop** | Dynamic Stop Loss | Sets at **75% of ADR** from entry (min 2.0%). |
+| **End of Day** | Time-based Close | 15:55 ET for US markers / Market-specific for Intl. |
 
 ---
 
-## Analysis: Could we do better?
+## 4. Operational Guardrails
 
-### Current Weaknesses
-1.  **Static Dip Buffers**: Waiting for a flat 0.5% dip on a stock that only moves 1% a day is very different from waiting for 0.5% on a stock that moves 8%.
-2.  **Disconnected Logic**: The Strategic Agent might be "Bullish," but the Target Layer is in "Caution" mode, creating a logic mismatch.
-3.  **Connection Reliance**: If the bot disconnects, it relies on the "Big Bang" 6% target, which might be too optimistic, causing a winner to turn into a loser.
+### Systemic Crash Protection
+The `MacroAnalyzer` continuously monitors for systemic crashes. If detected, the `macro_regime` is set to `SYSTEMIC_CRASH`, which globally blocks all new entries regardless of candidate strength.
 
-### Proposed Optimizations
-1.  **ADR-Relative Entry**: Wait for a dip equal to **10% of the ADR**, not a flat percentage.
-2.  **Sentiment-Aware Entry**: If Strategy Score is > 0.8 (Extreme Bullish), skip the dip and buy at Market.
-3.  **VSA-Enhanced Targets**: Use Volume Climax signals to adjust the "Big Bang" target down before a reversal happens.
+### Indicator Anchoring
+For low-volatility stocks (ADR < 2.5%), the pricing engine anchors targets to major technical levels (SMA 20, 50, 200) if they are within 1% of the calculated price, improving the probability of fill at clear support/resistance.
