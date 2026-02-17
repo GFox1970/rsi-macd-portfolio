@@ -32,9 +32,10 @@ Since everything is running on **Hetzner**, you must ensure the following IPs ar
 ## 1. Troubleshooting Checklist
 If the bot is not placing trades or the dashboard is stale, follow these steps:
 1.  **Check Orchestrator Logs**: `tail -n 100 logs/orchestrator.log`. Verify that the daily sequence completed.
-2.  **Verify Candidates**: Ensure `data/top_20_day_trading_candidates.csv` exists and has a current timestamp.
-3.  **Check Bot Connectivity**: `docker logs --tail 50 trading-bot`. Look for "Connection Error" or "401 Unauthorized" from Alpaca/IBKR.
-4.  **Database Integrity**: Check if `ml_db/ml_data.db` is locked or corrupted.
+2.  **Verify GHA-VM Handover**: If harvesting completes on GHA but the VM doesn't start training, check `logs/orchestrator_auto.log` on the VM for argument errors or connection failures.
+3.  **Verify Candidates**: Ensure `data/top_20_day_trading_candidates.csv` exists and has a current timestamp.
+4.  **Check Bot Connectivity**: `docker logs --tail 50 trading-bot`. Look for "Connection Error" or "401 Unauthorized" from Alpaca/IBKR.
+5.  **Database Integrity**: Check if `ml_db/ml_data.db` is locked or corrupted.
 
 ## 2. Common Failure Modes
 
