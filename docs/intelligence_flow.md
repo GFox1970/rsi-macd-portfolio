@@ -37,10 +37,11 @@ graph TD
     G -- "Current Price > Limit Target" --> H["WAIT: Pending Pullback"]
     G -- "Price hits Limit Target" --> I{"Risk/Fee Layer (MVC)"}
     
-    I -- "Order Size < MVC (ADR-Aware)" --> J["REJECT: Fee Inefficient"]
-    I -- "Order Size >= MVC" --> K["EXECUTE: Bracket Order"]
+    I -- "Below MVC Threshold" --> J["REJECT: Fee Inefficient"]
+    I -- "Meets MVC" --> K["Phase 4: Dynamic Sizing"]
     
-    K --> L["Active Management (ExitEvaluator)"]
+    K --> L["EXECUTE: Bracket Order"]
+    L --> M["Active Management (ExitEvaluator)"]
 ```
 
 ### Key Logic Gates
@@ -60,7 +61,19 @@ graph TD
     *   **VSA Bullishness**: If professional accumulation (Stopping Volume) is detected, the bot bypasses the dip requirement for near-market entry.
     *   **Regime Multipliers**: Dips are expanded in Bear markets (2.0x) and tightened in Bull markets (0.2x).
 
-#### C. Fee Efficiency Gate (MVC)
+#### C. Phase 4: Dynamic Sizing Layer (`determine_order_quantity`)
+*   **Purpose**: Calculates the **exact dollar amount** to risk on the trade. Order sizes are **not static**.
+*   **Logic (Integrated)**:
+    1.  **Budget Control**: Starts with a base allowance from the `CapitalAllocationManager`.
+    2.  **Conviction Multiplier**: Scales position size based on ML Confidence:
+        *   < 0.60: **0.5x** (Caution)
+        *   0.60 - 0.74: **1.0x** (Base)
+        *   0.75 - 0.89: **1.5x** (Strong)
+        *   \>= 0.90: **2.0x** (High Conviction)
+    3.  **ADR Damper**: If ADR > 5%, size is multiplied by **0.8x** to reduce "volatility shock" risk.
+    4.  **Fee Efficiency Boost (MVC)**: In Track A, if the calculated size is below the **MVC**, it is boosted up to the MVC threshold (max 5x base) to ensure it is worth the commission cost.
+
+#### D. Fee Efficiency Gate (MVC)
 *   **Purpose**: Ensures commissions or FX fees don't eat more than 10% of the expected move.
 *   **Formula**: `MVC = Total Commissions / (ADR% * Net Profit Margin%)`.
 *   **Benefit**: This gate is now **ADR-Aware**. Volatile stocks have a lower dollar-minimum requirement than stable ones.
