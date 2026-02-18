@@ -80,7 +80,11 @@ graph TB
     - **Live Learning (Agility)**: `TradingBot` performs `_reload_config()` per loop to pick up Tier 1 optimizations (Adaptive Optimizer) without restart.
     - **Signals**: Bot calculates tech indicators and fetches macro regime via `MacroAnalyzer`.
     - **Sizing**: `CapitalRiskManager` applies fee-aware sizing (MVC) and enforces dynamic portfolio/symbol exposure caps (e.g., 90% total / 10% per symbol) rather than hard position counts.
-    - **Survival**: If `VIX > 40`, the bot enters Survival Mode, blocking new buys.
+    - **Survival**: If `VIX > 40`, the bot enters Survival Mode, blocking new buys. 
+    - **Downturn Protection (Phase 5)**: In Bearish/Volatile regimes, the bot automatically:
+        - Buys **Protective Puts** to hedge existing long positions.
+        - Sells **Covered Calls** for income.
+        - Executes **Whitelisted Shorting** on highly liquid symbols (TSLA, NVDA, etc.) to profit from the drop.
     - **Exits**: `ExitEvaluator` consults the **AI Intraday Pilot** (T3) for tactical conviction.
     - **Opportunity Cost**: `ShadowResultTracker` (T1) monitors skipped trades in the decision log and backfills real-world outcomes to ensure the ML model can learn from missed opportunities.
 3.  **Archiving & Rotation**:

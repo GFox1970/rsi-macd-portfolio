@@ -58,6 +58,13 @@ If the bot is not placing trades or the dashboard is stale, follow these steps:
     2. Force a model retrain: `python ml_pipeline/run_pipeline.py --force`.
     3. Verify `ml_db/models/feature_schema.json` matches the training output.
 
+### 2.5 Disk Space Exhaustion (Hetzner VM)
+-   **Symptom**: "No space left on device" during deployment or log writing.
+-   **Resolution**:
+    1.  Perform emergency pruning: `docker system prune -a -f`.
+    2.  Check for large unrotated logs in `/var/lib/docker/containers`.
+    3.  Verify that the deployment script is using `--no-cache` to prevent build-up of intermediate layers.
+
 ## 3. Monitoring Dashboards
 -   **Grafana (Port 3000)**:
     -   **Trading Engine Health**: CPU/RAM usage and loop latency.
@@ -68,10 +75,15 @@ If the bot is not placing trades or the dashboard is stale, follow these steps:
 
 ## 4. Maintenance Runbooks
 
-### 4.1 Cleaning up Docker Junk (Weekly)
+### 4.1 Cleaning up Docker Junk (Weekly & Emergency)
 ```bash
+# Emergency reclamation (clears cache and unused images)
+docker system prune -a -f
+
+# Specific project cleanup
 ./scripts/cleanup_docker.sh
 ```
+The Hetzner VM has a 40GB limit. Total reclamation via `prune -a -f` typically yields 10-15GB.
 This removes dangling images and stopped containers to reclaim disk space.
 
 ### 4.2 Log Management & Rotation

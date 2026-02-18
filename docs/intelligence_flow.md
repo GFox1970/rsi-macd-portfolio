@@ -42,6 +42,11 @@ graph TD
     
     K --> L["EXECUTE: Bracket Order"]
     L --> M["Active Management (ExitEvaluator)"]
+    
+    B -- "Bearish Regime" --> N{"Phase 5: Downturn Protection"}
+    N --> N1["Protective Puts (Hedge Holdings)"]
+    N --> N2["Covered Calls (Income Yield)"]
+    N --> N3["Whitelisted Shorting (NVDA/AAPL/TSLA)"]
 ```
 
 ### Key Logic Gates
@@ -100,3 +105,19 @@ The `MacroAnalyzer` continuously monitors for systemic crashes. If detected, the
 
 ### Indicator Anchoring
 For low-volatility stocks (ADR < 2.5%), the pricing engine anchors targets to major technical levels (SMA 20, 50, 200) if they are within 1% of the calculated price, improving the probability of fill at clear support/resistance.
+
+---
+
+## 5. Phase 5: Downturn Protection (The "Survivalist")
+**Trigger**: `BEAR_DEFENSIVE`, `VOLATILE_CAUTION`, or `SYSTEMIC_CRASH` Regimes
+**Component**: `TradingBot._check_for_options_strategy()` & `_check_for_short_strategy()`
+
+| Protection Type | Trigger Condition | Execution Logic | Goal |
+| :--- | :--- | :--- | :--- |
+| **Protective Put** | `BEAR_DEFENSIVE` + Holding Long Position | Buys OTM/ATM Put Option via IBKR. | Delta Hedge against crashes. |
+| **Covered Call** | `VOLATILE_CAUTION` + Holding Long Position | Sells OTM Call Option via IBKR. | Yield generation in stagnant markets. |
+| **Whitelisted Short** | Bearish Regime + Whitelist Match + Technical Confirm | Executes `short_sell` with whitelisted symbols (e.g., TSLA). | Capitalize on falling major tickers. |
+
+### Technical Confirmations for Shorting
+*   **Whitelisted Tickers Only**: Limited to highly liquid stocks (AAPL, NVDA, TSLA, etc.) to ensure borrow availability and low fees.
+*   **Bearish Confirmation**: Requires **RSI > 65** (Overbought) OR a bearish **MACD Crossover** to enter.

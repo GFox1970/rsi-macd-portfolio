@@ -10,7 +10,7 @@ A fully autonomous, machine-learning-enhanced trading system designed for consis
 - **Cloud Archiving**: Automated monthly data shipping to Google Drive via `rclone`.
 - **Management Insight**: High-fidelity JSONL decision logs displayed in a premium Streamlit dashboard.
 - **Multi-Broker**: Unified routing for Alpaca (US), IBKR (Global), and Crypto.
-- **Sentinel SRE & Healer Agent**: Autonomous health monitoring and "Self-Healing" agent that identifies gaps, generates fixes, and **automatically applies code repairs** overnight via a secure VM-to-GitHub pipeline.
+- **Sentinel SRE & AI Agent**: Autonomous health monitoring and "Self-Healing" agent that identifies gaps, generates fixes, and **automatically applies code repairs** overnight via a secure VM-to-GitHub pipeline. The `ai-agent` also handles VM-to-GHA coordination for resource-intensive builds.
 
 ## 📂 Documentation Hub
 For detailed guides, please refer to the `docs/` folder:
@@ -133,6 +133,18 @@ The bot operates in a daily cycle managed by the `DailyOrchestrator` running dir
 3. **Pre-New York (13:30 UTC)**: Final candidate selection and XGBoost retraining for the US open.
 4. **Intraday**: Continuous execution via the `IntradayOrchestrator` on the VM.
 5. **Self-Healing Window**: Auto-fixes are applied between 21:00 - 01:30 UTC during the Deep Silence period.
+
+## 🧼 VM Maintenance & Disk Hygiene
+
+The Hetzner VM has a 40GB disk. To prevent "No space left on device" errors during deployment, follow these practices:
+
+1.  **Automated Pruning**: The deployment script now uses `--no-cache` and sequential builds to minimize peak disk usage.
+2.  **Manual Cleanup**: If the build fails due to disk space, run:
+    ```bash
+    docker system prune -a -f
+    ```
+    This removes all unused images, containers, and build cache, typically reclaiming 5-15GB.
+3.  **Logs**: Logs are automatically rotated, but large logs in `/app/logs` can be cleared if necessary.
 
 ---
 *Developed for Advanced Agentic Trading.*
