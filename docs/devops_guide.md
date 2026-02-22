@@ -33,3 +33,11 @@ A comprehensive monitoring suite is built into the system:
 - **Persistence**: All critical data (ML models, decision logs, positions) is stored in host-mounted volumes (`./logs`, `./ml_db`, `./data`).
 - **Backups**: Automated cron jobs on the VM take periodic snapshots of the `./ml_db` and `./logs` directories.
 - **Rollback**: Triggered by redeploying the previous stable Git commit via the `deploy-to-vm.yml` workflow.
+
+## 7. Local Data Synchronization (Harvesting)
+To conduct realistic local backtests, retrain models, or debug using the latest production context, you must periodically synchronize the local repository with the VM's active datasets and ML files.
+
+This is handled by the **Data-Harvester** (`scripts/pull_vm_data.sh`) script, which uses `rsync` to pull:
+- The complete `data/` directory (including compiled XGBoost models, training snapshots, and the primary historical database `ml_trading_data.db`).
+- Whitelisted operational logs (`logs/*.jsonl`, orchestrator logs).
+- Essential shared configurations, such as the dynamically tuned ML thresholds (`shared/ml_threshold.json`).
