@@ -50,6 +50,9 @@ Data is ingested from four primary sources:
 4.  **Labeling**: Post-trade "Outcomes" are computed by the `PerformanceAnalyzer` and pushed back into the SQLite `outcome_profit` column.
 5.  **Training**: `XGBoostTrainer` queries SQLite `ml_rows` where `outcome_profit` is NOT NULL.
 
+### 4.2 Data Synchronization
+To maintain parity between the production environment (Hetzner VM) and the local development environment, data is synchronized via the **Data-Harvester** skill (`scripts/pull_vm_data.sh`). This script pulls down the latest XGBoost models, training datasets, and primary historic database (`ml_trading_data.db`) to enable realistic local backtesting and model iterations.
+
 ## 5. Retention Rules
 -   **Decision Logs**: Standard retention of 90 days. Older logs are archived to `.gz` format monthly.
 -   **ML Data**: Retained indefinitely to support multi-year backtesting and longitudinal model analysis.
