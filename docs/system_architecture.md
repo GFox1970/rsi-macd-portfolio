@@ -91,8 +91,8 @@ graph TB
     - Rotated logs and historical CSVs are zipped and shipped to Google Drive monthly via `rclone`.
 
 4.  **Autonomous Healing (T4)**:
-    - **Sentinel Agent**: Periodically scans `trading_bot.log`, `orchestrator.log`, and `control_audit_log.jsonl`.
-    - **Strategic Feedback**: Communicates directly with Tier 2 via `sentinel_feedback.json` to force parameter resets or adjust entry confidence floors when stagnation is detected.
+    - **Sentinel Agent**: Periodically scans `trading_bot.log`, `orchestrator.log`, and `enhanced_decision_log.jsonl` (specifically auditing for unfilled limit orders via `ShadowResultTracker`).
+    - **Strategic Feedback**: Communicates directly with Tier 2 via `sentinel_feedback.json` to force parameter resets or adjust entry confidence floors when stagnation or execution failures are detected.
     - **Healer Agent (Autonomous Repair)**:
         - **Directive Generation**: Translates Sentinel findings into actionable code-level directives.
         - **Auto-Execution Pipeline**: Executes approved directives (`can_auto_apply: true`) automatically during orchestrator runs.

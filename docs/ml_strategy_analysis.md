@@ -87,12 +87,12 @@ enhanced_decision_log.jsonl (logs every decision: BUY/SELL/SKIP)
 **Frequency**: Nightly via `daily_orchestrator.py`  
 **Value**: Learns "What technical patterns lead to profit?"
 
-### 🕵️ Layer 3: Strategic Audit (Sentinel Agent)
-**Purpose**: POST-MORTEM analysis of missed opportunities  
-**Data Source**: `PerformanceAnalyzer` (actual vs. potential performance)  
+### 🕵️ Layer 3: Strategic & Execution Audit (Sentinel Agent)
+**Purpose**: POST-MORTEM analysis of missed opportunities and undetected execution failures  
+**Data Source**: `PerformanceAnalyzer` (actual vs. potential) + `ShadowResultTracker` (unfilled trade execution audits)  
 **Frequency**: Nightly, after market close  
 **Triggers**: HealerAgent  
-**Value**: Identifies "What strategic gaps exist?" (e.g., overly conservative VOLATILE mode)
+**Value**: Identifies "What strategic gaps exist?" and "Are limit orders actually filling?" (e.g., overly conservative VOLATILE mode or ML price distortion)
 
 **LLM Integration**:
 - **Vertex AI (Gemini)**: Analyzes performance gaps and generates strategic recommendations in natural language
