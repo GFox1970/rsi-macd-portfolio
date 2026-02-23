@@ -104,7 +104,7 @@ graph TB
         - **Audit Trail**: Full traceability from detection to fix in `healer_history.jsonl`.
 
 ## 4. Service Boundaries
--   **Broker Router**: Unified interface for Alpaca (US), IBKR (Global), and CCXT (Crypto).
+-   **Broker Router**: Unified interface for Alpaca (US), IBKR (Global), and CCXT (Crypto). Normalizes outputs (e.g., parsing native account state into standard dictionaries) to prevent cross-API breaking changes.
 -   **Strategic Judgement Layer**: Decoupled module that combines ML scores, news sentiment, and macro bias. Includes **Strict Schema Gating** and **Volume Spread Analysis (VSA)** to block invalid data or confirm price action.
 -   **Exit Evaluator**: Responsible for same-day and overnight exit logic. Features a **"Grip & Harvest" (ADR Capture)** strategy: 
     - **Ultra-Aggressive Entry**: Buy buffers as low as 0.02% to ensure execution.
