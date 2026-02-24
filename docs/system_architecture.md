@@ -67,15 +67,15 @@ graph TB
 
 ## 3. Data Flows
 1.  **Orchestrated Prep (Push Architecture)**:
-    - **Step 1: Data Fetch (GHA - 4x Daily)**: GitHub Action (`scheduled-orchestrator.yml`) runs at `06:30`, `12:30`, `17:30`, and `22:30` UTC. It fetches global market data and refreshes the symbol universe.
-    - **Step 2: Sync & Trigger (GHA -> VM)**: After data harvesting, GHA synchronization:
-        - Uploads fresh historical CSVs and JSON reports.
+    - **Step 1: Data Fetch (GHA - 4x Daily)**: GitHub Action (`scheduled-orchestrator.yml`) runs at `06:30`, `12:30`, `17:30`, and `22:30` UTC. It fetches global market data (US, UK, HK), normalizes intraday series, and refreshes the symbol universe.
+    - **Step 2: Sync & Trigger (GHA -> VM)**: After harvesting, GHA synchronization:
+        - Uploads fresh historical CSVs (intraday raw data), JSON reports, and `all_symbols.txt`.
         - Syncs `data/.orchestrator_progress.json` to inform the VM of completed tasks.
-        - Sends a remote SSH trigger to initiate the VM's execution phase immediately.
-    - **Step 3: Intelligence Execution (VM)**: VM Orchestrator detects the GHA trigger (and the progress file), skips harvesting, and executes:
-        - **Post-Mortem**: Analyzes trade outcomes.
-        - **AI Strategic Agent**: Generates `strategic_plan.json`.
-        - **Training**: Retrains XGBoost on new outcomes.
+        - Sends a remote SSH trigger to initiate the VM's execution phase.
+    - **Step 3: Intelligence Execution & Freshness (VM)**: VM Orchestrator utilizes a **3-hour freshness threshold** (`MAX_DATA_AGE_HOURS=3`).
+        - **Session Awareness**: The 3-hour limit ensures the HK Prep run (4.5h after US Midday) correctly identifies the previous session as stale, forcing fresh candidate discovery.
+        - **Contingency / Fallback**: The VM maintains an active local crontab. If GHA fails to trigger or sync, the VM detects the data is stale (>3h) and automatically executes local harvesting/discovery.
+        - **Intelligence Loop**: After ensuring fresh discovery, the VM executes Post-Mortem, AI Strategic Planning, and ML training.
 2.  **Market Execution (T2)**:
     - **Live Learning (Agility)**: `TradingBot` performs `_reload_config()` per loop to pick up Tier 1 optimizations (Adaptive Optimizer) without restart.
     - **Signals**: Bot calculates tech indicators and fetches macro regime via `MacroAnalyzer`.

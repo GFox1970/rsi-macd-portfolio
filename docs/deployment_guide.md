@@ -26,13 +26,19 @@ If the CI/CD pipeline fails, use the `deploy_compose.sh` script located in the r
 ```
 This script handles container cleanup and sequential service startup.
 
-## 4. Rollback Procedures
+## 5. Scheduling & Contingency
+-   **Master Scheduler**: GitHub Actions (`scheduled-orchestrator.yml`) is the primary driver for all market sessions.
+-   **VM Fallback**: The VM maintains an active `crontab` that mirrors the GHA schedule.
+-   **GHA-Check Logic**: The VM orchestrator utilizes a 3-hour data freshness check. If GHA successfully syncs fresh data, the VM's cron job terminates early (detecting the data is fresh). If GHA fails, the VM cron job detects stale data and automatically begins local harvesting as a fallback.
+-   **Timezone**: The VM is fixed to `UTC/GMT` to unify scheduling across GHA and production.
+
+## 6. Rollback Procedures
 -   **Automated Rollback**: Redeploy the previous Git tag via the GitHub Actions UI.
 -   **Manual Rollback**:
     1.  On the VM, navigate to the backup directory: `cd /home/deploy/trading-bot/backups`.
     2.  Locate the previous stable daily snapshot.
     3.  Run `git checkout <tag_id>`.
-    4.  Restart services: `docker-compose up -d`.
+    4.  Restart services: `docker compose up -d`.
 
 ## 5. Environment Configuration
 -   **VM Spec**: Ubuntu 22.04 LTS, 4 vCPUs, 8GB RAM.

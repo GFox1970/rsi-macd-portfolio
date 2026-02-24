@@ -54,9 +54,13 @@ If the bot is not placing trades or the dashboard is stale, follow these steps:
 ### 2.4 ML Schema Drift (Strict Gating)
 -   **Symptom**: "MLIntegration: STRICT_SCHEMA active. Missing feature... Blocking trade."
 -   **Resolution**: This occurs when the daily data fetcher produces features that don't match the `feature_schema.json` the model was trained on. 
-    1. Check `orchestrator.log` for feature engineering errors.
     2. Force a model retrain: `python ml_pipeline/run_pipeline.py --force`.
     3. Verify `ml_db/models/feature_schema.json` matches the training output.
+
+### 2.6 Float Object Errors ('float' object has no attribute 'get')
+-   **Symptom**: "Error in main loop: 'float' object has no attribute 'get'" in logs.
+-   **Cause**: Occurs when the bot expects a dictionary (like a `sector_report` score or a `news_sentiment` tuple) but receives a raw float value instead.
+-   **Resolution**: Ensure consistent return types in `_get_news_sentiment` and add robust type checking when accessing `sector_report` in `trading_bot.py`.
 
 ### 2.5 Disk Space Exhaustion (Hetzner VM)
 -   **Symptom**: "No space left on device" during deployment or log writing.

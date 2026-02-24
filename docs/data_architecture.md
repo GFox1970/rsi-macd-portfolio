@@ -53,7 +53,8 @@ Data is ingested from four primary sources:
 ### 4.2 Data Synchronization
 To maintain parity between the production environment (Hetzner VM) and the local development environment, data is synchronized via the **Data-Harvester** skill (`scripts/pull_vm_data.sh`). This script pulls down the latest XGBoost models, training datasets, and primary historic database (`ml_trading_data.db`) to enable realistic local backtesting and model iterations.
 
-## 5. Retention Rules
+## 5. Retention & Refresh Rules
 -   **Decision Logs**: Standard retention of 90 days. Older logs are archived to `.gz` format monthly.
 -   **ML Data**: Retained indefinitely to support multi-year backtesting and longitudinal model analysis.
--   **Market Data**: Intermediate CSVs in `./data/historical` are refreshed weekly.
+-   **Market Data (Refresh)**: Intermediate CSVs in `./data/historical` are refreshed **4 times daily** (HK, UK, US Prep and US Midday) via GitHub Actions.
+-   **GHA-VM Parity**: Fresh raw intraday `.csv` files are automatically synchronized from GHA to the VM during each market prep session to ensure the orchestrator generates targets from the latest available market data.
