@@ -79,7 +79,8 @@ graph TB
 2.  **Market Execution (T2)**:
     - **Live Learning (Agility)**: `TradingBot` performs `_reload_config()` per loop to pick up Tier 1 optimizations (Adaptive Optimizer) without restart.
     - **Signals**: Bot calculates tech indicators and fetches macro regime via `MacroAnalyzer`.
-    - **Sizing**: `CapitalRiskManager` applies fee-aware sizing (MVC) and enforces dynamic portfolio/symbol exposure caps (e.g., 90% total / 10% per symbol) rather than hard position counts.
+    - **Sizing**: `CapitalRiskManager` applies **ADR-driven fee-aware sizing** (MVC). The Minimum Viable Capital (MVC) is calculated using the symbol's actual Average Daily Range (ADR) as the expected move, not a hardcoded 1% benchmark. This allows the bot to correctly size into high-volatility swing stocks (e.g., SMCI at 6% ADR needs only ~$222 MVC). Position cap is $5,000 per trade. Account base currencies are `USD` for Alpaca (US) and `GBP` for Trading 212 (UK/EU).
+    - **IBKR**: Used for market data subscriptions only (HK/EU/UK live data). Not used for order execution.
     - **Survival**: If `VIX > 40`, the bot enters Survival Mode, blocking new buys. 
     - **Downturn Protection (Phase 5)**: In Bearish/Volatile regimes, the bot automatically:
         - Buys **Protective Puts** to hedge existing long positions.
