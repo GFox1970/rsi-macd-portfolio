@@ -62,6 +62,17 @@ If the bot is not placing trades or the dashboard is stale, follow these steps:
 -   **Cause**: Occurs when the bot expects a dictionary (like a `sector_report` score or a `news_sentiment` tuple) but receives a raw float value instead.
 -   **Resolution**: Ensure consistent return types in `_get_news_sentiment` and add robust type checking when accessing `sector_report` in `trading_bot.py`.
 
+### 2.7 MLDataCollector 'has no attribute log_decision' (Buy Path Crash)
+-   **Symptom**: `'MLDataCollector' object has no attribute 'log_decision'` spamming in `trading_bot.log`; `enhanced_decision_log.jsonl` only contains a rotation header and no real decisions.
+-   **Cause**: `trading_bot.py` was mistakenly calling `self.ml_data_collector_instance.log_decision()`. The `MLDataCollector` class does not have a `log_decision` method — that belongs to `EnhancedDecisionLogger`.  This crashes the buy path for every symbol.
+-   **Resolution**: Remove all `ml_data_collector_instance.log_decision(...)` calls. Decisions are already logged via the `decision_logger` (`EnhancedDecisionLogger`) object which is the correct API.
+
+### 2.8 IBKR Error 322 — Account Summary Subscription Leak
+-   **Symptom**: Persistent `Error 322: Maximum number of account summary requests exceeded; desubscribe to previous request first` in `trading_bot.log`.
+-   **Cause**: `ibkr_executor.py`'s `get_account_summary()` called `ib.accountSummary()` which creates a persistent subscription in TWS. Without cancellation these stack up every loop cycle until TWS rejects new ones.
+-   **Resolution**: Call `ib.cancelAccountSummary(req_id)` in a `finally` block immediately after reading the subscription data.
+
+
 ### 2.5 Disk Space Exhaustion (Hetzner VM)
 -   **Symptom**: "No space left on device" during deployment or log writing.
 -   **Resolution**:
