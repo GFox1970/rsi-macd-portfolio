@@ -68,10 +68,15 @@ If the bot is not placing trades or the dashboard is stale, follow these steps:
 -   **Resolution**: Remove all `ml_data_collector_instance.log_decision(...)` calls. Decisions are already logged via the `decision_logger` (`EnhancedDecisionLogger`) object which is the correct API.
 
 ### 2.8 IBKR Error 322 — Account Summary Subscription Leak
--   **Symptom**: Persistent `Error 322: Maximum number of account summary requests exceeded; desubscribe to previous request first` in `trading_bot.log`.
--   **Cause**: `ibkr_executor.py`'s `get_account_summary()` called `ib.accountSummary()` which creates a persistent subscription in TWS. Without cancellation these stack up every loop cycle until TWS rejects new ones.
--   **Resolution**: Call `ib.cancelAccountSummary(req_id)` in a `finally` block immediately after reading the subscription data.
+-   **Symptom**: Persistent `Error 322: Maximum number of account summary requests exceeded`.
+-   **Cause**: Repeatedly calling `reqAccountSummary()` in a loop without proper cancellation, leading to a session leak in TWS/Gateway.
+-   **Resolution**: The `IBKRBroker` now initiates a single, **long-lived account summary subscription** (using `reqId=9001`) during the connection phase. The `get_account_summary()` method reads from this cached state, preventing request saturation.
 
+
+### 2.9 Alpaca Position Loading (0 Positions Sync)
+-   **Symptom**: `Alpaca: loaded 0 positions` even when positions exist in the web dashboard.
+-   **Cause**: Version mismatch between the `alpaca-py` SDK (which uses `get_all_positions`) and legacy SDKs or paper trading setups (which use `list_positions`).
+-   **Resolution**: The `BrokerRouter` and `TradingBot` now use a duck-typing approach to try both methods sequentially.
 
 ### 2.5 Disk Space Exhaustion (Hetzner VM)
 -   **Symptom**: "No space left on device" during deployment or log writing.
