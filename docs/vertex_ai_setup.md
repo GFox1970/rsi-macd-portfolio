@@ -182,7 +182,7 @@ python -c "from trading_bot.core.vertex_ai_client import VertexAIClient; c = Ver
 
 Expected output:
 ```
-✅ Vertex AI initialized: gemini-2.0-flash-001 (project=gen-lang-client-0536875321, location=global)
+✅ Vertex AI initialized: gemini-2.0-flash (project=gen-lang-client-0536875321, location=global)
 Available: True
 ```
 
@@ -195,7 +195,7 @@ python agent/sentinel_agent.py
 
 If you see logs like:
 ```
-Sentinel initialized with Vertex AI: gemini-2.0-flash-001
+Sentinel initialized with Vertex AI: gemini-2.0-flash
 ```
 
 Then the setup is working! ✅

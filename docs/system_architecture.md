@@ -80,7 +80,7 @@ graph TB
     - **Live Learning (Agility)**: `TradingBot` performs `_reload_config()` per loop to pick up Tier 1 optimizations (Adaptive Optimizer) without restart.
     - **Signals**: Bot calculates tech indicators and fetches macro regime via `MacroAnalyzer`.
     - **Sizing**: `CapitalRiskManager` applies **ADR-driven fee-aware sizing** (MVC). The Minimum Viable Capital (MVC) is calculated using the symbol's actual Average Daily Range (ADR) as the expected move, not a hardcoded 1% benchmark. This allows the bot to correctly size into high-volatility swing stocks (e.g., SMCI at 6% ADR needs only ~$222 MVC). Position cap is $5,000 per trade. Account base currencies are `USD` for Alpaca (US) and `GBP` for Trading 212 (UK/EU).
-    - **IBKR**: Used for market data subscriptions only (HK/EU/UK live data). Not used for order execution.
+    - **Broker Integration**: US orders route to Alpaca. International orders (.L, .PA, .DE, .HK, .TO) route to IBKR for execution.
     - **Survival**: If `VIX > 40`, the bot enters Survival Mode, blocking new buys. 
     - **Downturn Protection (Phase 5)**: In Bearish/Volatile regimes, the bot automatically:
         - Buys **Protective Puts** to hedge existing long positions.
@@ -105,7 +105,7 @@ graph TB
         - **Audit Trail**: Full traceability from detection to fix in `healer_history.jsonl`.
 
 ## 4. Service Boundaries
--   **Broker Router**: Unified interface for Alpaca (US), IBKR (Global), and CCXT (Crypto). Normalizes outputs (e.g., parsing native account state into standard dictionaries) to prevent cross-API breaking changes. Incorporates multi-region **time-of-day awareness** (LSE, XETRA, SBF, HKEX, TSX) to autonomously gate trading execution per local market hours, ensuring the bot remains active while specific markets are closed.
+-   **Broker Router**: Unified interface for Alpaca (US), IBKR (Global), and CCXT (Crypto). Normalizes outputs (e.g., parsing native account state into standard dictionaries) to prevent cross-API breaking changes. Actively routes orders based on symbol suffix and region. Incorporates multi-region **time-of-day awareness** (LSE, XETRA, SBF, HKEX, TSX) to autonomously gate trading execution per local market hours, ensuring the bot remains active while specific markets are closed.
 -   **Strategic Judgement Layer**: Decoupled module that combines ML scores, news sentiment, and macro bias. Includes **Strict Schema Gating** and **Volume Spread Analysis (VSA)** to block invalid data or confirm price action.
 -   **Exit Evaluator**: Responsible for same-day and overnight exit logic. Features a **"Grip & Harvest" (ADR Capture)** strategy: 
     - **Ultra-Aggressive Entry**: Buy buffers as low as 0.02% to ensure execution.
