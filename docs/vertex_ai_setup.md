@@ -1,11 +1,11 @@
-# Vertex AI Setup Guide
+# Gemini 2.0 (Google GenAI) Setup Guide
 
-This guide walks you through setting up Google Cloud Vertex AI authentication for the trading bot.
+This guide walks you through setting up Gemini 2.0 authentication for the trading bot using the lightweight `google-genai` SDK.
 
 ## Prerequisites
 
 - Google Cloud project with billing enabled: `gen-lang-client-0536875321`
-- Google Cloud Console access
+- Google API Key (Gemini API) from [Google AI Studio](https://aistudio.google.com/)
 - Local terminal access or SSH access to your Hetzner VM
 
 ## Step 1: Enable Vertex AI API

@@ -105,7 +105,11 @@ graph TB
         - **Audit Trail**: Full traceability from detection to fix in `healer_history.jsonl`.
 
 ## 4. Service Boundaries
--   **Broker Router**: Unified interface for Alpaca (US), IBKR (Global), and CCXT (Crypto). Normalizes outputs (e.g., parsing native account state into standard dictionaries) to prevent cross-API breaking changes. Actively routes orders based on symbol suffix and region. Incorporates multi-region **time-of-day awareness** (LSE, XETRA, SBF, HKEX, TSX) to autonomously gate trading execution per local market hours, ensuring the bot remains active while specific markets are closed.
+-   **Broker Router**: Unified interface for Alpaca (US), IBKR (Global), and CCXT (Crypto). 
+    - **Robust Identity Layer**: Implements **conId** (IBKR) and **asset_id** (Alpaca) tracking. This provides a "hard-link" to the broker's record, preventing redundant orders if symbol mapping fails.
+    - **Normalization**: Normalizes outputs into standard dictionaries. Actively routes orders based on symbol suffix and region. 
+    - **Currency Awareness**: Intelligently suffixes international symbols for Dashboards (e.g., `.TO` for CAD, `.L` for GBP) to ensure accurate local pricing and P&L aggregation.
+    - **Time-of-Day Awareness**: Autonomously gates execution per local market hours (LSE, TSX, etc.).
 -   **Strategic Judgement Layer**: Decoupled module that combines ML scores, news sentiment, and macro bias. Includes **Strict Schema Gating** and **Volume Spread Analysis (VSA)** to block invalid data or confirm price action.
 -   **Exit Evaluator**: Responsible for same-day and overnight exit logic. Features a **"Grip & Harvest" (ADR Capture)** strategy: 
     - **Ultra-Aggressive Entry**: Buy buffers as low as 0.02% to ensure execution.
@@ -120,11 +124,12 @@ graph TB
 -   **Language**: Python 3.10+
 -   **Infrastructure**: Hetzner Dedicated VM (Linux), Systemd (Process monitoring).
 -   **Database**: SQLite (`capital_alloc.db`, `ml_features.db`), JSONL (Decision Audit).
--   **ML Framework**: XGBoost (Gating), Vertex AI/Gemini (News/Thematic Analysis, Sentinel Audits, Healer Auto-Repair).
+-   **ML Framework**: XGBoost (Gating), Google Gemini 2.0 / google-genai (News/Thematic Analysis, Sentinel Audits, Healer Auto-Repair).
 -   **Broker APIs**: Alpaca-py, IBKR Gateway (Portal/API), CCXT.
 -   **Utilities**: `rclone` (Cloud Sync), `zip` (Log bundling).
 
 ## 6. Deployment Topology
 -   **Host**: Linux VM.
--   **Persistence**: Local `data/` and `logs/` volumes with monthly cloud offloading.
+-   **Persistence**: Local `data/` and `logs/` volumes with monthly cloud offloading. 
+    - **Fail-Safe Persistence**: Implements a `/tmp/` fallback for critical trading state (like `bracket_targets.json`) to handle "Read-only file system" errors in restricted Docker environments.
 -   **Monitoring**: Streamlit Dashboard for real-time visibility into the "Brain" (Strategic Judgement).
