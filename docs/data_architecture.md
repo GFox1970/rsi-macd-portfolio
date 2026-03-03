@@ -23,7 +23,13 @@ Data is ingested from four primary sources:
     -   `decision`: Action (BUY/SKIP/SELL), Confidence, Reasoning.
     -   `order_outcome`: Fill price, qty, status.
 
-### 3.2 ML Feature DB (Training)
+### 3.2 IBKR Execution Log (Persistence)
+-   **Format**: JSONL
+-   **Location**: `logs/ibkr_fills.jsonl`
+-   **Purpose**: Persistent storage of all IBKR trade executions to prevent data loss during bot restarts/redeployments.
+-   **Fields**: `timestamp`, `symbol`, `side`, `qty`, `price`, `execId`, `orderId`, `permId`, `account`.
+
+### 3.3 ML Feature DB (Training)
 -   **Engine**: SQLite
 -   **Location**: `ml_db/ml_data.db`
 -   **Table: `ml_rows`**

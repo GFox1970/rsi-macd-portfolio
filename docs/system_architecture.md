@@ -72,9 +72,9 @@ graph TB
         - Uploads fresh historical CSVs (intraday raw data), JSON reports, and `all_symbols.txt`.
         - Syncs `data/.orchestrator_progress.json` to inform the VM of completed tasks.
         - Sends a remote SSH trigger to initiate the VM's execution phase.
-    - **Step 3: Intelligence Execution & Freshness (VM)**: VM Orchestrator utilizes a **3-hour freshness threshold** (`MAX_DATA_AGE_HOURS=3`).
-        - **Session Awareness**: The 3-hour limit ensures the HK Prep run (4.5h after US Midday) correctly identifies the previous session as stale, forcing fresh candidate discovery.
-        - **Contingency / Fallback**: The VM maintains an active local crontab. If GHA fails to trigger or sync, the VM detects the data is stale (>3h) and automatically executes local harvesting/discovery.
+    - **Step 3: Intelligence Execution & Freshness (VM)**: VM Orchestrator and Trading Bot maintain strict freshness thresholds. 
+        - **Intraday Staleness (Stale Block)**: The bot now enforces a **3-minute staleness hard-block** for all exit and buy evaluations. If real-time data flow is interrupted beyond this limit, the bot skips the symbol to prevent "ghost trading" on stagnant prices.
+        - **Session Awareness**: The VM Orchestrator identifies sessions older than 3 hours as stale, forcing fresh candidate discovery for the next session.
         - **Intelligence Loop**: After ensuring fresh discovery, the VM executes Post-Mortem, AI Strategic Planning, and ML training.
 2.  **Market Execution (T2)**:
     - **Live Learning (Agility)**: `TradingBot` performs `_reload_config()` per loop to pick up Tier 1 optimizations (Adaptive Optimizer) without restart.
@@ -109,6 +109,7 @@ graph TB
     - **Robust Identity Layer**: Implements **conId** (IBKR) and **asset_id** (Alpaca) tracking. This provides a "hard-link" to the broker's record, preventing redundant orders if symbol mapping fails.
     - **Normalization**: Normalizes outputs into standard dictionaries. Actively routes orders based on symbol suffix and region. 
     - **Currency Awareness**: Intelligently suffixes international symbols for Dashboards (e.g., `.TO` for CAD, `.L` for GBP) to ensure accurate local pricing and P&L aggregation.
+    - **Execution Persistence**: Automatically logs every fill to `logs/ibkr_fills.jsonl` to bypass session-based data loss, ensuring long-term auditability in the dashboard.
     - **Time-of-Day Awareness**: Autonomously gates execution per local market hours (LSE, TSX, etc.).
 -   **Strategic Judgement Layer**: Decoupled module that combines ML scores, news sentiment, and macro bias. Includes **Strict Schema Gating** and **Volume Spread Analysis (VSA)** to block invalid data or confirm price action.
 -   **Exit Evaluator**: Responsible for same-day and overnight exit logic. Features a **"Grip & Harvest" (ADR Capture)** strategy: 
@@ -131,5 +132,5 @@ graph TB
 ## 6. Deployment Topology
 -   **Host**: Linux VM.
 -   **Persistence**: Local `data/` and `logs/` volumes with monthly cloud offloading. 
-    - **Fail-Safe Persistence**: Implements a `/tmp/` fallback for critical trading state (like `bracket_targets.json`) to handle "Read-only file system" errors in restricted Docker environments.
+    - **Availability**: Standardized on `rw` (Read-Write) volume mounts across all services to ensure persistence of broker targets, recovery signals, and audit logs.
 -   **Monitoring**: Streamlit Dashboard for real-time visibility into the "Brain" (Strategic Judgement).
