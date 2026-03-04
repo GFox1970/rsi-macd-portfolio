@@ -60,6 +60,7 @@ graph TB
     K -->|Market Techs| T
     H -->|ZIP Archives| U
     C -->|Auto-Tuning| J
+    C -->|Heartbeat Log| V
     J -->|Audit Trail| V[JSONL Decision Log]
     HR -->|Backfill Skipped| V
 
@@ -87,6 +88,7 @@ graph TB
         - Sells **Covered Calls** for income.
         - Executes **Whitelisted Shorting** on highly liquid symbols (TSLA, NVDA, etc.) to profit from the drop.
     - **Exits**: `ExitEvaluator` consults the **AI Intraday Pilot** (T3) for tactical conviction.
+    - **Regional Diversification ("Flex-Control")**: To prevent over-concentration in specific markets (e.g., TSX vs. NYSE), the bot applies a **Confidence Tax** (+0.20 ML threshold) when a region exceeds 40% of the portfolio NAV. This ensures high "Burden of Proof" for over-exposed markets while allowing alpha capture.
     - **Opportunity Cost**: `ShadowResultTracker` (T1) monitors skipped trades in the decision log and backfills real-world outcomes to ensure the ML model can learn from missed opportunities.
 3.  **Archiving & Rotation**:
     - Rotated logs and historical CSVs are zipped and shipped to Google Drive monthly via `rclone`.
@@ -109,6 +111,7 @@ graph TB
     - **Robust Identity Layer**: Implements **conId** (IBKR) and **asset_id** (Alpaca) tracking. This provides a "hard-link" to the broker's record, preventing redundant orders if symbol mapping fails.
     - **Normalization**: Normalizes outputs into standard dictionaries. Actively routes orders based on symbol suffix and region. 
     - **Currency Awareness**: Intelligently suffixes international symbols for Dashboards (e.g., `.TO` for CAD, `.L` for GBP) to ensure accurate local pricing and P&L aggregation.
+    - **Cluster Prevention**: Automatically cancels pending/stale orders for a symbol before placing a new bracket entry to prevent "Machine Gun" clustering and redundant broker fills.
     - **Execution Persistence**: Automatically logs every fill to `logs/ibkr_fills.jsonl` to bypass session-based data loss, ensuring long-term auditability in the dashboard.
     - **Time-of-Day Awareness**: Autonomously gates execution per local market hours (LSE, TSX, etc.).
 -   **Strategic Judgement Layer**: Decoupled module that combines ML scores, news sentiment, and macro bias. Includes **Strict Schema Gating** and **Volume Spread Analysis (VSA)** to block invalid data or confirm price action.

@@ -27,4 +27,5 @@ Broker fees represent a significant percentage of small portfolios. The bot must
 ## 4. Operational Guardrails
 - **Fee Toxicity Gate**: Orders where fees > 10% of the statistical expected move (ADR) are automatically blocked.
 - **Sector Concentration Gate**: No single sector (e.g., Technology, Energy) can exceed 30% of total portfolio exposure.
+- **Regional Diversification ("Flex-Control")**: Applies a dynamic **Confidence Tax** (+0.20 ML threshold) if a single market (e.g., LSE, TSX) exceeds 40% of the portfolio NAV. This balances geographical risk with alpha capture.
 - **Concentration Risk**: At the "Seed" phase, the bot is restricted to a maximum of 3-5 simultaneous open positions to avoid spreading capital too thin across multiple fee-paying entries.
