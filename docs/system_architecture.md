@@ -32,6 +32,7 @@ graph TB
     subgraph "Tier 2: Intraday Runtime (Docker/Systemd)"
         I[Intraday Orchestrator] -->|Main Loop| J[Trading Bot Engine]
         J -->|Signals| K[Signal Evaluator]
+        J -->|S-Tier Layer| KS[S-Tier Indicators]
         J -->|VSA Layer| KV[VSA Analyzer]
         J -->|Strategy| L[Strategic Judgement Layer]
         J -->|Risk| M[Capital/PDT Manager]
@@ -76,8 +77,12 @@ graph TB
         - **Freshness**: Maintains strict 3-minute staleness limits for intraday data and 3-hour session limits for candidate discovery.
 2.  **Market Execution (T2)**:
     - **Live Learning (Agility)**: `TradingBot` performs `_reload_config()` per loop to pick up Tier 1 optimizations (Adaptive Optimizer) without restart.
-    - **Signals**: Bot calculates tech indicators and fetches macro regime via `MacroAnalyzer`.
-    - **Sizing**: `CapitalRiskManager` applies **ADR-driven fee-aware sizing** (MVC). The Minimum Viable Capital (MVC) is calculated using the symbol's actual Average Daily Range (ADR) as the expected move, not a hardcoded 1% benchmark. This allows the bot to correctly size into high-volatility swing stocks (e.g., SMCI at 6% ADR needs only ~$222 MVC). Position cap is $5,000 per trade. Account base currencies are `USD` for Alpaca (US) and `GBP` for Trading 212 (UK/EU).
+    - **Signals**: Bot calculates technindicators and fetches macro regime via `MacroAnalyzer`. It applies the **S-Tier Confluence Layer** (`OrderFlowAnalyzer`, `StructureMonitor`, `VWAPAnalyzer`) to validate entries.
+    - **Sizing (Hybrid Conviction)**: `TradingAgent` applies **Tiered Sizing** based on signal strength:
+        - **Alpha (1.0x)**: Full S-Tier confluence (POC + BOS + VWAP).
+        - **Beta (0.5x)**: Momentum-only breakout (BOS + HH) with flexible VWAP filters.
+        - **Normal (0.75x)**: Standard strategic alignment.
+    - **Sizing (Risk)**: `CapitalRiskManager` applies **ADR-driven fee-aware sizing** (MVC). Position cap is $5,000 per trade.
     - **Broker Integration**: US orders route to Alpaca. International orders (.L, .PA, .DE, .HK, .TO) route to IBKR for execution.
     - **Survival**: If `VIX > 40`, the bot enters Survival Mode, blocking new buys. 
     - **Downturn Protection (Phase 5)**: In Bearish/Volatile regimes, the bot automatically:
@@ -111,10 +116,11 @@ graph TB
     - **Cluster Prevention**: Automatically cancels pending/stale orders for a symbol before placing a new bracket entry to prevent "Machine Gun" clustering and redundant broker fills.
     - **Execution Persistence**: Automatically logs every fill to `logs/ibkr_fills.jsonl` to bypass session-based data loss, ensuring long-term auditability in the dashboard.
     - **Time-of-Day Awareness**: Autonomously gates execution per local market hours (LSE, TSX, etc.).
--   **Strategic Judgement Layer**: Decoupled module that combines ML scores, news sentiment, and macro bias. Includes **Strict Schema Gating** and **Volume Spread Analysis (VSA)** to block invalid data or confirm price action.
--   **Exit Evaluator**: Responsible for same-day and overnight exit logic. Features a **"Grip & Harvest" (ADR Capture)** strategy: 
+-   **Strategic Judgement Layer**: Decoupled module that combines ML scores, news sentiment, and macro bias. Includes **Strict Schema Gating**, **Volume Spread Analysis (VSA)**, and the **S-Tier Confluence Layer** to filter high-probability entries.
+-   **Exit Evaluator**: Responsible for same-day and overnight exit logic. Features a **"Grip & Harvest" (ADR Capture)** strategy and the **"The Runner" Protocol**: 
     - **Ultra-Aggressive Entry**: Buy buffers as low as 0.02% to ensure execution.
-    - **Dynamic Harvesting**: Targets 75% of the symbol's ADR move for profit taking.
+    - **Dynamic Harvesting**: Targets 75% of the symbol's ADR move for partial profit taking.
+    - **"The Runner" Structural Trailing**: After Stage 1 profit lock (+1.5%), the remaining position trails the last **Higher Low (HL)** identified by `StructureMonitor`. This allows capturing parabolic rallies by ignoring shallow retracements that don't break market structure.
     - **Big Bang Caps**: Sets 1.5x ADR limit orders as high-water mark protection.
     - **VSA Integration**: Detects **Buying Climax** and **Volume Divergence** for early profit protection before standard stops trigger.
     - **AI Pilot Integration**: Consults the AI Intraday Pilot for tactical conviction and trailing stop adjustments.
