@@ -67,16 +67,13 @@ graph TB
 ```
 
 ## 3. Data Flows
-1.  **Orchestrated Prep (Push Architecture)**:
-    - **Step 1: Data Fetch (GHA - 4x Daily)**: GitHub Action (`scheduled-orchestrator.yml`) runs at `06:30`, `12:30`, `17:30`, and `22:30` UTC. It fetches global market data (US, UK, HK), normalizes intraday series, and refreshes the symbol universe.
-    - **Step 2: Sync & Trigger (GHA -> VM)**: After harvesting, GHA synchronization:
-        - Uploads fresh historical CSVs (intraday raw data), JSON reports, and `all_symbols.txt`.
-        - Syncs `data/.orchestrator_progress.json` to inform the VM of completed tasks.
-        - Sends a remote SSH trigger to initiate the VM's execution phase.
-    - **Step 3: Intelligence Execution & Freshness (VM)**: VM Orchestrator and Trading Bot maintain strict freshness thresholds. 
-        - **Intraday Staleness (Stale Block)**: The bot now enforces a **3-minute staleness hard-block** for all exit and buy evaluations. If real-time data flow is interrupted beyond this limit, the bot skips the symbol to prevent "ghost trading" on stagnant prices.
-        - **Session Awareness**: The VM Orchestrator identifies sessions older than 3 hours as stale, forcing fresh candidate discovery for the next session.
-        - **Intelligence Loop**: After ensuring fresh discovery, the VM executes Post-Mortem, AI Strategic Planning, and ML training.
+1.  **Orchestrated Prep (Pull Architecture)**:
+    - **Step 1: GHA Trigger (2x Daily)**: GitHub Action (`scheduled-orchestrator.yml`) runs at `06:30` (London Prep + US Post-Mortem) and `12:30` (US Market Prep) UTC. 
+    - **Step 2: Trigger VM**: GHA sends a remote SSH trigger to the VM to initiate the full orchestration sequence. GHA no longer performs data harvesting or commits historical data to the repository, significantly reducing CI/CD workload.
+    - **Step 3: Harvesting & Execution (VM)**: The VM Orchestrator handles the entire pipeline locally:
+        - **Harvesting**: Fetches global market data, updates symbol universe, and refreshes macro/news/earnings context on the VM's disk.
+        - **Intelligence Execution**: Performs Post-Mortem, AI Strategic Planning, and ML training/inference.
+        - **Freshness**: Maintains strict 3-minute staleness limits for intraday data and 3-hour session limits for candidate discovery.
 2.  **Market Execution (T2)**:
     - **Live Learning (Agility)**: `TradingBot` performs `_reload_config()` per loop to pick up Tier 1 optimizations (Adaptive Optimizer) without restart.
     - **Signals**: Bot calculates tech indicators and fetches macro regime via `MacroAnalyzer`.
