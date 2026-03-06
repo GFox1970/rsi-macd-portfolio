@@ -45,6 +45,7 @@ graph TB
         Q[Thematic Manager]
         R[Macro Analyzer]
         P1[AI Intraday Pilot]
+        DF[Unified Data Factory]
     end
 
     subgraph "External Systems"
@@ -56,6 +57,9 @@ graph TB
     J -->|Inference| P
     J -->|Sentiment| O
     J -->|Macro Regime| R
+    J -->|Historical Data| DF
+    DF -->|Real-time / Fallback| S
+    DF -->|Delayed Fallback| T
     L -->|Tactical Conviction| P1
     N -->|Orders| S
     K -->|Market Techs| T
@@ -82,6 +86,7 @@ graph TB
         - **Alpha (1.0x)**: Full S-Tier confluence (POC + BOS + VWAP).
         - **Beta (0.5x)**: Momentum-only breakout (BOS + HH) with flexible VWAP filters.
         - **Normal (0.75x)**: Standard strategic alignment.
+    - **Data Unification**: The bot utilizes a **Unified Data Factory** ([data_factory.py](file:///home/gary/rsi-macd-bot/trading_bot/core/data_factory.py)) to fetch historical data. This component centralizes the prioritization of sources (IBKR > Alpaca > YFinance) and ensures consistent timestamp handling and interval mapping across the bot engine and the visual dashboard.
     - **Sizing (Risk)**: `CapitalRiskManager` applies **ADR-driven fee-aware sizing** (MVC). Position cap is $5,000 per trade.
     - **Broker Integration**: US orders route to Alpaca. International orders (.L, .PA, .DE, .HK, .TO) route to IBKR for execution.
     - **Survival**: If `VIX > 40`, the bot enters Survival Mode, blocking new buys. 
@@ -114,7 +119,12 @@ graph TB
     - **Normalization**: Normalizes outputs into standard dictionaries. Actively routes orders based on symbol suffix and region. 
     - **Currency Awareness**: Intelligently suffixes international symbols for Dashboards (e.g., `.TO` for CAD, `.L` for GBP) to ensure accurate local pricing and P&L aggregation.
     - **Cluster Prevention**: Automatically cancels pending/stale orders for a symbol before placing a new bracket entry to prevent "Machine Gun" clustering and redundant broker fills.
-    - **Execution Persistence**: Automatically logs every fill to `logs/ibkr_fills.jsonl` to bypass session-based data loss, ensuring long-term auditability in the dashboard.
+    - **Execution Persistence (Ghostbuster v1.1.5)**: Automatically logs every fill to `logs/ibkr_fills.jsonl`. Implements a **Zero-Cost Shield** and **Cash-Only Guard** (See [Ghostbuster Protocol](file:///home/gary/rsi-macd-bot/docs/GHOSTBUSTER_PROTOCOL.md) for technical details):
+        - **v1.1.4 (Zero-Cost Shield)**: Forces $0.0 P&L for any trade segment missing an opening record in the current session. This ensures "unknown" historical trades result in $0.0 P&L instead of phantom profits.
+        - **v1.1.5 (Cash-Only Guard)**: Implements broker-specific liquidity checks. Before placing an international trade, the bot verifies that the **IBKR-specific settled cash** (plus a 1.5x commission buffer) is sufficient to cover the order, ignoring cash in other accounts to prevent margin borrowing.
+        - **Session Strictness**: Instantly discards any fill or report that does not match the current UTC calendar day.
+        - **Zero-Cost Recovery**: If an execution is reported without a matching session-local opening trade, the system forces a $0.0 P&L by setting the `Avg Entry` == `Avg Exit`. This prevents "100% gain" phantoms from stale broker sessions.
+        - **Anomaly Shield**: Validates broker-reported realized P&L by ensuring the reconstructed entry price is within 25% of current market price. High-variance discrepancies are automatically suppressed.
     - **Time-of-Day Awareness**: Autonomously gates execution per local market hours (LSE, TSX, etc.).
 -   **Strategic Judgement Layer**: Decoupled module that combines ML scores, news sentiment, and macro bias. Includes **Strict Schema Gating**, **Volume Spread Analysis (VSA)**, and the **S-Tier Confluence Layer** to filter high-probability entries.
 -   **Exit Evaluator**: Responsible for same-day and overnight exit logic. Features a **"Grip & Harvest" (ADR Capture)** strategy and the **"The Runner" Protocol**: 
