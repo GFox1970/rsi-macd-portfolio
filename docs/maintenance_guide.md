@@ -139,14 +139,19 @@ If the bot is stuck in "Survival Mode" because of a stale macro state:
     ```
 3.  Restart the `trading-bot` to pick up the `macro.json` update.
 
-### 4.6 Sentinel SRE & Self-Healing
-Phase 3.5 introduced the Sentinel Agent for autonomous maintenance:
-- **Automation**: Runs nightly via `daily_orchestrator.py` (scheduled at 22:30 UTC).
+### 4.6 Sentinel SRE & Reality-Sync
+Phase 3.5 introduced the Sentinel Agent for autonomous maintenance and **Reality-Sync** auditing:
+- **Automation**: Runs nightly via `daily_orchestrator.py` and via the standalone `scripts/sentinel_health_check.py`.
+- **Reality-Sync**: Automatically detects if critical logs are stale (e.g., bot hasn't updated in 3h) or if the broker's positions drift from the bot's internal tracking.
 - **Activity Log**: `logs/sentinel_activity.jsonl` tracks all agent findings and actions.
 - **Health Report**: Available in the Dashboard under Health & Audit → Sentinel Audits.
-- **Manual Run**:
+- **Manual Audit**:
     ```bash
-    python agent/sentinel_agent.py
+    # Run deep health check (throttled to 12h)
+    python scripts/sentinel_health_check.py
+
+    # Force immediate health check
+    python scripts/sentinel_health_check.py --force
     ```
 - **Direct Feedback**: The agent communicates via `data/sentinel_feedback.json`. If the bot is behaving unexpectedly (e.g., ignoring entries), check if the Sentinel has issued a "Strategic Reset" directive.
 - **Strategy Auditing**: If the Sentinel flags "Strategic Stagnation," it means the bot's parameter tuning is not producing trades. Review `logs/control_audit_log.jsonl` for details.

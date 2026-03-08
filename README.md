@@ -10,7 +10,8 @@ A fully autonomous, machine-learning-enhanced trading system designed for consis
 - **Cloud Archiving**: Automated monthly data shipping to Google Drive via `rclone`.
 - **Management Insight**: High-fidelity JSONL decision logs displayed in a premium Streamlit dashboard.
 - **Multi-Broker**: Unified routing for Alpaca (US), IBKR (Global), and Crypto.
-- **Sentinel SRE & AI Agent**: Autonomous health monitoring and "Self-Healing" agent that identifies gaps, generates fixes, and **automatically applies code repairs** overnight via a secure VM-to-GitHub pipeline. The `ai-agent` also handles VM-to-GHA coordination for resource-intensive builds.
+- **Sentinel SRE & Reality-Sync**: Autonomous health monitoring and "Self-Healing" agent. Now includes **Reality-Sync** for detecting stale logs or portfolio drift (bot vs. broker).
+- **Self-Healing Agent**: Identifies gaps, generates fixes, and **automatically applies code repairs** overnight via a secure VM-to-GitHub pipeline.
 
 ## 📂 Documentation Hub
 For detailed guides, please refer to the `docs/` folder:
