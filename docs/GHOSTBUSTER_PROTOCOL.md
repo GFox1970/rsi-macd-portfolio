@@ -11,7 +11,7 @@ The **Ghostbuster Protocol** is a critical safety layer designed to eliminate "p
 
 ### 2. Zero-Cost Shield (Anchor Recovery)
 - **Rule**: If a closing trade is detected without a matching opening trade in the current session, it is assumed to have **Zero Realized P&L**.
-- **Implementation**: 
+- **Implementation**:
     - The system identifies "missing segments" (e.g., selling 100 shares when only 0 were bought today).
     - It deduces a "Ghost" entry price equal to the exit price.
     - **Avg Entry == Avg Exit** -> **$0.00 P&L**.
@@ -19,7 +19,7 @@ The **Ghostbuster Protocol** is a critical safety layer designed to eliminate "p
 
 ### 3. Anomaly Shield (Variance Gating)
 - **Rule**: Broker-reported realized P&L is only trusted if the deduced entry price is mathematically plausible.
-- **Implementation**: 
+- **Implementation**:
     - The system reconstructs the entry price from the broker's realized P&L report.
     - If `abs(deduced_entry - current_price) / current_price > 0.25`, the report is rejected.
 - **Goal**: Blocks high-variance "Ghost profit" reports ($5k+ anomalies) that arise during broker maintenance or data glitches.
@@ -31,7 +31,12 @@ The **Ghostbuster Protocol** is a critical safety layer designed to eliminate "p
     - Ignores cash in other currency buckets or accounts to prevent unintended margin borrowing.
 - **Goal**: Shields the portfolio from margin debt and interest charges.
 
-## Audit Trail
+### 5. High-Fidelity Price Anchor (Reality Sync)
+- **Rule**: Trading decisions (Exits/TP/SL) must utilize high-fidelity broker prices before falling back to interval-based historical candles.
+- **Implementation**: 
+    - The `sync_positions` logic captures the live `current_price` (Alpaca) or `marketPrice` (IBKR).
+    - The evaluation loop prioritizes this "Price Anchor" for all active exit checks.
+- **Goal**: Eliminates "stale data paralysis" where the bot fails to take a 15% profit because the historical data provider is lagging behind the broker's real-time quote.
 All Ghostbuster actions (reconciliations, report rejections, and cash-blocks) are logged to:
 - `logs/ibkr_fills.jsonl`
 - `logs/enhanced_decision_log.jsonl`

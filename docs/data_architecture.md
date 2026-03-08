@@ -5,10 +5,8 @@ The system utilizes a hybrid data architecture, combining unstructured **JSONL**
 
 ## 2. Ingestion Layer
 Data is ingested from four primary sources:
--   **Market Data (OHLCV)**: Ingested via **yfinance** (Preparation/Training) and **Alpaca** (Live Execution).
--   **Sector Data**: Multi-factor sector relative strength fetched via **Polygon.io**.
--   **Sentiment Data**: Real-time news snippets processed via LLM/NLP.
--   **Broker State**: Positions and equity fetched via Alpaca/IBKR REST APIs.
+-   **Market Data (OHLCV)**: Ingested via **yfinance** (Preparation/Training) and **Alpaca** (Historical Analysis). Used for indicator calculation and strategy charting.
+-   **Broker State (High-Fidelity)**: Live positions and current market prices fetched via Alpaca/IBKR. **Primary source of truth for real-time exit decisions (TP/SL).**
 -   **Macro Indicators**: FRED (Federal Reserve Economic Data) for VIX and interest rate series.
 
 ## 3. Data Storage Models
