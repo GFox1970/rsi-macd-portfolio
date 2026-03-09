@@ -119,7 +119,7 @@ graph TB
     - **Robust Identity Layer**: Implements **conId** (IBKR) and **asset_id** (Alpaca) tracking. This provides a "hard-link" to the broker's record, preventing redundant orders if symbol mapping fails.
     - **Normalization**: Normalizes outputs into standard dictionaries. Actively routes orders based on symbol suffix and region. 
     - **Currency Awareness**: Intelligently suffixes international symbols for Dashboards (e.g., `.TO` for CAD, `.L` for GBP) to ensure accurate local pricing and P&L aggregation.
-    - **Cluster Prevention**: Automatically cancels pending/stale orders for a symbol before placing a new bracket entry to prevent "Machine Gun" clustering and redundant broker fills.
+    - **Cluster Prevention**: Actively cancels pending/stale bracket legs for a symbol (via explicit order ID or symbol sweeps) before placing an updated bracket entry (e.g., when averaging down) to prevent FIFO mismatches and "Machine Gun" clustering.
     - **Execution Persistence (Ghostbuster v1.1.5)**: Automatically logs every fill to `logs/ibkr_fills.jsonl`. Implements a **Zero-Cost Shield** and **Cash-Only Guard** (See [Ghostbuster Protocol](file:///home/gary/rsi-macd-bot/docs/GHOSTBUSTER_PROTOCOL.md) for technical details):
         - **v1.1.4 (Zero-Cost Shield)**: Forces $0.0 P&L for any trade segment missing an opening record in the current session. This ensures "unknown" historical trades result in $0.0 P&L instead of phantom profits.
         - **v1.1.5 (Cash-Only Guard)**: Implements broker-specific liquidity checks. Before placing an international trade, the bot verifies that the **IBKR-specific settled cash** (plus a 1.5x commission buffer) is sufficient to cover the order, ignoring cash in other accounts to prevent margin borrowing.
@@ -135,6 +135,7 @@ graph TB
     - **"The Runner" Structural Trailing**: After Stage 1 profit lock (+1.5%), the remaining position trails the last **Higher Low (HL)** identified by `StructureMonitor`. This allows capturing parabolic rallies by ignoring shallow retracements that don't break market structure.
     - **Big Bang Caps**: Sets 1.5x ADR limit orders as high-water mark protection.
     - **VSA Integration**: Detects **Buying Climax** and **Volume Divergence** for early profit protection before standard stops trigger.
+    - **Safe Exit Retry ("Free-and-Sell")**: Handles aggressively blocked panic sells (e.g., due to `held_for_orders` locks on Alpaca brackets) by intercepting the rejection, cancelling the specific blocking bracket legs, waiting for the exchange to clear, and immediately retrying the sale to prevent orphaned positions.
     - **AI Pilot Integration**: Consults the AI Intraday Pilot for tactical conviction and trailing stop adjustments.
 -   **Decision Logger**: Thread-safe JSONL persistence for the "Management Insight" dashboard.
 -   **Data Archiver**: Stateless wrapper around `rclone` for cloud synchronization.
