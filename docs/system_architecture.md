@@ -130,6 +130,7 @@ graph TB
 -   **Strategic Judgement Layer**: Decoupled module that combines ML scores, news sentiment, and macro bias. Includes **Strict Schema Gating**, **Volume Spread Analysis (VSA)**, and the **S-Tier Confluence Layer** to filter high-probability entries.
 -   **Exit Evaluator**: Responsible for same-day and overnight exit logic. Features a **"Grip & Harvest" (ADR Capture)** strategy and the **"The Runner" Protocol**: 
     - **Ultra-Aggressive Entry**: Buy buffers as low as 0.02% to ensure execution.
+    - **Pricing Anomaly Guard**: Safe-guards against anomalous entry and exit calculations by enforcing strict 20% deviation caps from the last close.
     - **Dynamic Harvesting**: Targets 75% of the symbol's ADR move for partial profit taking.
     - **"The Runner" Structural Trailing**: After Stage 1 profit lock (+1.5%), the remaining position trails the last **Higher Low (HL)** identified by `StructureMonitor`. This allows capturing parabolic rallies by ignoring shallow retracements that don't break market structure.
     - **Big Bang Caps**: Sets 1.5x ADR limit orders as high-water mark protection.

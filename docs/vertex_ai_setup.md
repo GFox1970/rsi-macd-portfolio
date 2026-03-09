@@ -1,6 +1,6 @@
-# Gemini 2.0 (Google GenAI) Setup Guide
+# Gemini 1.5 (Google GenAI) Setup Guide
 
-This guide walks you through setting up Gemini 2.0 authentication for the trading bot using the lightweight `google-genai` SDK.
+This guide walks you through setting up Gemini 1.5 authentication for the trading bot using the lightweight `google-genai` SDK.
 
 ## Prerequisites
 
@@ -182,7 +182,7 @@ python -c "from trading_bot.core.vertex_ai_client import VertexAIClient; c = Ver
 
 Expected output:
 ```
-✅ Vertex AI initialized: gemini-2.0-flash (project=gen-lang-client-0536875321, location=global)
+✅ Vertex AI initialized: gemini-1.5-flash (project=gen-lang-client-0536875321, location=global)
 Available: True
 ```
 
@@ -195,7 +195,7 @@ python agent/sentinel_agent.py
 
 If you see logs like:
 ```
-Sentinel initialized with Vertex AI: gemini-2.0-flash
+Sentinel initialized with Gemini AI: gemini-1.5-flash
 ```
 
 Then the setup is working! ✅
