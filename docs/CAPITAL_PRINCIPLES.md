@@ -29,3 +29,4 @@ Broker fees represent a significant percentage of small portfolios. The bot must
 - **Sector Concentration Gate**: No single sector (e.g., Technology, Energy) can exceed 30% of total portfolio exposure.
 - **Regional Diversification ("Flex-Control")**: Applies a dynamic **Confidence Tax** (+0.20 ML threshold) if a single market (e.g., LSE, TSX) exceeds 40% of the portfolio NAV. This balances geographical risk with alpha capture.
 - **Concentration Risk**: At the "Seed" phase, the bot is restricted to a maximum of 3-5 simultaneous open positions to avoid spreading capital too thin across multiple fee-paying entries.
+- **Exit Safety ("Deleveraging Bypass")**: To ensure the bot can always reduce risk, exit orders (both long-sells and short-covers) are exempt from entry-level position size and sector exposure caps. This prevents "locking in" oversized positions due to risk control conflicts.

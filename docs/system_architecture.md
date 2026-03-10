@@ -87,7 +87,7 @@ graph TB
         - **Beta (0.5x)**: Momentum-only breakout (BOS + HH) with flexible VWAP filters.
         - **Normal (0.75x)**: Standard strategic alignment.
     - **Data Unification**: The bot utilizes a **Unified Data Factory** ([data_factory.py](file:///home/gary/rsi-macd-bot/trading_bot/core/data_factory.py)) to fetch historical data. This component centralizes the prioritization of sources (IBKR > Alpaca > YFinance) and ensures consistent timestamp handling and interval mapping across the bot engine and the visual dashboard.
-    - **Sizing (Risk)**: `CapitalRiskManager` applies **ADR-driven fee-aware sizing** (MVC). Position cap is $5,000 per trade. Exit methods explicitly bypass these limits to ensure successful risk reduction.
+    - **Sizing (Risk)**: `CapitalRiskManager` applies **ADR-driven fee-aware sizing** (MVC). Position cap is $5,000 per trade. **Exit safety**: Position-reducing orders (selling long / buying to cover short) explicitly bypass these limits to ensure successful risk reduction for oversized positions.
     - **Broker Integration**: US orders route to Alpaca. International orders (.L, .PA, .DE, .HK, .TO) route to IBKR for execution.
     - **Survival**: If `VIX > 40`, the bot enters Survival Mode, blocking new buys. 
     - **Downturn Protection (Phase 5)**: In Bearish/Volatile regimes, the bot automatically:
