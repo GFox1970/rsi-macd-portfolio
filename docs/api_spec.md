@@ -12,10 +12,17 @@
 -   **Websockets**: `wss://paper-api.alpaca.markets/stream` for real-time order fill updates and account changes.
 
 ### 1.2 Interactive Brokers (IBKR)
--   **Integration Method**: IBKR Client Portal API (Headless Gateway).
--   **Host/Port**: `localhost:4002` (within Docker network).
--   **Authentication**: Automated via `TWS_USERID` and `TWS_PASSWORD` injected into the Gateway container.
--   **Flow**: The bot sends REST requests to the gateway, which forwards them to IBKR's FIX/REST bridge.
+-   **Integration Method**: IBKR Gateway via `ib_insync` (TWS API).
+-   **Host/Port**: `ib-gateway:8888` (within Docker network, overridable via `IBKR_HOST`/`IBKR_PORT`).
+-   **Authentication**: Standard IBKR credentials configured on the Gateway container; the bot connects via the TWS API, not Client Portal REST.
+-   **Execution Flow**:
+    -   `BrokerRouter` uses `IBKRBroker` to submit orders and read positions using the TWS API (`ib_insync`).
+    -   A long-lived **account summary subscription** (`reqAccountSummary`) provides:
+        -   `NetLiquidation` (equity), `TotalCashValue` (cash), `BuyingPower`, and `GrossPositionValue` (capital in positions).
+    -   A long-lived **account updates subscription** (`reqAccountUpdates`) populates:
+        -   `RealizedPnL` / `UnrealizedPnL` at the account level, used by the dashboard for **IBKR Day P&L**.
+-   **Dashboard Consumption**:
+    -   The Streamlit dashboard reads these live values via `IBKRBroker.get_account_summary()` and displays **NAV (equity)**, **cash**, **capital active**, and **Day P&L** directly from IBKR, with order-based P&L only used for historical period summaries and as a fallback.
 
 ## 2. Market Data Providers
 

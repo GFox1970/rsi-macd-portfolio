@@ -89,6 +89,10 @@ graph TB
     - **Data Unification**: The bot utilizes a **Unified Data Factory** ([data_factory.py](file:///home/gary/rsi-macd-bot/trading_bot/core/data_factory.py)) to fetch historical data. This component centralizes the prioritization of sources (IBKR > Alpaca > YFinance) and ensures consistent timestamp handling and interval mapping across the bot engine and the visual dashboard.
     - **Sizing (Risk)**: `CapitalRiskManager` applies **ADR-driven fee-aware sizing** (MVC). Position cap is $5,000 per trade. **Exit safety**: Position-reducing orders (selling long / buying to cover short) explicitly bypass these limits to ensure successful risk reduction for oversized positions.
     - **Broker Integration**: US orders route to Alpaca. International orders (.L, .PA, .DE, .HK, .TO) route to IBKR for execution.
+    - **Live Portfolio State (Dashboard)**: The Streamlit dashboard’s hero metrics (NAV, cash, capital active, Day P&L) are sourced directly from the brokers:
+        - **Alpaca**: `GET /v2/account`, `GET /v2/positions`, and `GET /v2/account/portfolio/history` (equity timeseries) drive NAV, cash, capital active, and US Day P&L.
+        - **IBKR**: Long-lived TWS API subscriptions (`reqAccountSummary`, `reqAccountUpdates`) provide `NetLiquidation`, `TotalCashValue`, `GrossPositionValue`, and account-level `RealizedPnL` / `UnrealizedPnL`, which the dashboard uses for international NAV, cash, capital active, and IBKR Day P&L.
+        - **Order-Based P&L**: The internal P&L engine (built from fills/orders) is now focused on historical/period analytics and acts as a fallback if live broker feeds are unavailable.
     - **Survival**: If `VIX > 40`, the bot enters Survival Mode, blocking new buys. 
     - **Downturn Protection (Phase 5)**: In Bearish/Volatile regimes, the bot automatically:
         - Buys **Protective Puts** to hedge existing long positions.

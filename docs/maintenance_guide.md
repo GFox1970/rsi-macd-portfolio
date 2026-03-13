@@ -78,6 +78,65 @@ If the bot is not placing trades or the dashboard is stale, follow these steps:
 -   **Cause**: Version mismatch between the `alpaca-py` SDK (which uses `get_all_positions`) and legacy SDKs or paper trading setups (which use `list_positions`).
 -   **Resolution**: The `BrokerRouter` and `TradingBot` now use a duck-typing approach to try both methods sequentially.
 
+### 2.10 rclone Archive Upload — Config Is a Directory
+-   **Symptom**: `Failed to load config file ".../rclone.conf": read ... is a directory` during Data Archiver step.
+-   **Cause**: The path configured for `rclone.conf` exists as a **directory** instead of a file (e.g. in Docker the volume or image has a directory at that path).
+-   **Resolution**: On the VM or in the container, ensure `rclone.conf` is a **file** with valid content. Remove or rename any directory at that path, then create the file (e.g. `rclone config` or copy a valid config into place). No code change is required.
+
+### 2.11 Healer Circuit Breaker (Auto-Execution Skipped)
+-   **Symptom**: Logs show `Circuit breaker OPEN: last 3 consecutive directives all failed. Skipping auto-execution.`
+-   **Cause**: The Healer skips auto-execution after the last three consecutive directive runs failed (e.g. search/replace mismatches) to avoid repeated failures.
+-   **Resolution**: Use the **Run Healer Directives** button in the app sidebar (under **🔧 Healer**). It is passcode-protected (Authorize Session first). The button runs **only** Healer directive execution (no full orchestrator), bypasses the circuit breaker, and is intended for retrying after code or directive fixes.
+-   **Where to see Healer log output**:
+    -   **Sidebar**: After a run, use the **View last run log** expander under 🔧 Healer for the execution log of that run.
+    -   **File**: `logs/healer_history.jsonl` (or `/app/logs/healer_history.jsonl` in Docker). Each line is a JSON record with `execution_log`, `status`, `symbol`, etc.
+    -   **Container stdout**: When the app runs in Docker, Healer `logger.info`/`logger.error` lines go to the container’s stdout. Use `docker logs <container_name>` (e.g. `docker logs trading-bot` or `docker logs streamlit`) to see them.
+
+### 2.12 Why the bot sometimes closes positions at a loss (Profit-first options)
+-   **What’s going on**: The bot can realise a loss in several ways:
+    1. **Bracket stop-loss (IBKR/Alpaca)**  
+       When you place a bracket order, a stop-loss order is sent to the exchange. If price hits that level, the **exchange** executes the stop; the bot is not “deciding” to sell at that moment. So volatility can trigger the SL and close the position at a loss.
+    2. **Same-day emergency stop**  
+       In `exit_elevator`, if a same-day position is down by the configured percentage (e.g. 2%), the bot **does** decide to sell to cap the loss.
+    3. **Overnight hard stop**  
+       For positions held overnight, a larger loss (e.g. ~3% or 1.5× ADR) triggers a hard stop and the bot sells.
+    4. **StagedExit time stop**  
+       After a position has been underwater for many days (e.g. 10/15), the Staged Exit protocol can **auto-sell** (CRITICAL/HIGH urgency) to free capital.
+-   **Safe Exit is not the cause**  
+   If you see “Activating Safe Exit” in logs, the bot **wanted** to sell (e.g. take profit) but the broker said shares were “held” by bracket legs. It then cancels those legs and retries the sell. So we’re not selling *because* we can’t cancel; we’re cancelling so we *can* sell (e.g. at a profit).
+-   **Profit-first behaviour (prefer to hold and wait)**  
+   To reduce realising small losses on **small LSE positions** (notional in GBP below a threshold), you can use these options under `config.trading_config.json` → `day_trading`:
+    - **`profit_first_bracket_sl_min_notional_gbp`** (default `0` = off)  
+      If the **order** notional (for LSE: price in pence × 0.01 × qty) is **below** this value in GBP, the bot uses a **wide “catastrophe only”** stop instead of the normal tight stop (so you’re less likely to be stopped out by normal volatility).
+    - **`profit_first_catastrophe_stop_pct`** (default `0.25`)  
+      When the above is active, stop is placed at this % below entry (e.g. 0.25 = 25% down). Only used for LSE when the order notional is below the min.
+    - **`emergency_sl_min_notional_gbp`** (default `0` = off)  
+      Same-day **emergency** stop-loss is **skipped** when the **position** notional (LSE, in GBP) is below this. So small same-day positions are not sold at a small loss; the bot holds and waits.
+    - **`profit_first_staged_exit_min_notional_gbp`** (default `0` = off)  
+      StagedExit **auto-sell** (time-based CRITICAL/HIGH) is **skipped** when the position notional (LSE, GBP) is below this; the recommendation is still persisted for the dashboard.
+-   **Example**  
+  Set `profit_first_bracket_sl_min_notional_gbp` to e.g. `500` and `emergency_sl_min_notional_gbp` to `500`. Then any LSE order/position with notional < £500 will: use a 25% catastrophe stop on the bracket (instead of ~2%), and will not be sold by the same-day emergency stop. You can still close manually or via TP/trailing logic.
+-   **Homework (actual vs could-have-done)**  
+  The bot's "checking its own homework" is done in `PerformanceAnalyzer.analyze_efficiency()`, which compares actual P&L to theoretical max (perfect long/short day trade) for a symbol/date. Use that to review "what we did vs what we could have done."
+
+### 2.13 Volume regime and regime-based profit-first (US + UK)
+-   **Volume regime**  
+  The bot classifies each symbol’s current volume vs its 20-day average as **low** (ratio < threshold), **normal**, or **high**. This is used for profit-first gating and optional size dampening.
+-   **Config** (under `day_trading`):
+    - **`volume_regime_low_threshold`** (default `0.8`): Ratio below this vs 20d avg ⇒ "low".
+    - **`volume_regime_high_threshold`** (default `1.2`): Ratio above this ⇒ "high".
+    - **`volume_regime_low_size_mult`** (default `0.8`): When volume regime is "low", order size is multiplied by this (e.g. 0.8 = 80% size).
+-   **Regime-based profit-first (US + UK)**  
+  When **`profit_first_in_volatile_regime`** is `true`, the bot applies profit-first (catastrophe stop, skip emergency SL, skip StagedExit auto-sell for small positions) in **both** US and UK when any of:
+  - Macro regime is **VOLATILE_CAUTION**, or
+  - VIX ≥ **`profit_first_vix_threshold`** (default `20`), or
+  - Volume regime is **low**.
+  Notional thresholds:
+  - **`profit_first_bracket_sl_min_notional_usd`** (default `500`): US order notional below this ⇒ catastrophe stop on bracket.
+  - **`emergency_sl_min_notional_usd`** (default `0`): US position notional below this ⇒ skip same-day emergency SL.
+  - **`profit_first_staged_exit_min_notional_usd`** (default `0`): US position notional below this ⇒ skip StagedExit auto-sell (recommendation still persisted).
+  So you can compare US vs UK with profit-first only in volatile/low-volume conditions by setting `profit_first_in_volatile_regime: true` and the USD thresholds (e.g. `500`).
+
 ### 2.5 Disk Space Exhaustion (Hetzner VM)
 -   **Symptom**: "No space left on device" during deployment or log writing.
 -   **Resolution**:
