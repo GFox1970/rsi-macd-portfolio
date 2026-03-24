@@ -80,8 +80,10 @@ If the bot is not placing trades or the dashboard is stale, follow these steps:
 
 ### 2.10 rclone Archive Upload — Config Is a Directory
 -   **Symptom**: `Failed to load config file ".../rclone.conf": read ... is a directory` during Data Archiver step.
--   **Cause**: The path configured for `rclone.conf` exists as a **directory** instead of a file (e.g. in Docker the volume or image has a directory at that path).
--   **Resolution**: On the VM or in the container, ensure `rclone.conf` is a **file** with valid content. Remove or rename any directory at that path, then create the file (e.g. `rclone config` or copy a valid config into place). No code change is required.
+-   **Cause**: Often Docker: bind-mounting a **single file** that did not exist on the host makes Docker create **`rclone.conf` as a directory** on the host. A real `rclone.conf` file is then impossible at that path until the bad directory is removed.
+-   **Resolution**:
+    1.  **Compose (recommended)**: Use `RCLONE_CONFIG_DIR` in `.env` — the repo mounts the **whole** `~/.config/rclone` directory into the orchestrator, so `rclone.conf` stays a normal file inside it.
+    2.  **If you still have a directory named `rclone.conf`**: On the VM, `rm -rf ~/.config/rclone/rclone.conf` (only if it is the mistaken empty directory), then run `rclone config` or copy a valid `rclone.conf` **file** into `~/.config/rclone/`.
 
 ### 2.11 Healer Circuit Breaker (Auto-Execution Skipped)
 -   **Symptom**: Logs show `Circuit breaker OPEN: last 3 consecutive directives all failed. Skipping auto-execution.`
@@ -138,11 +140,20 @@ If the bot is not placing trades or the dashboard is stale, follow these steps:
   So you can compare US vs UK with profit-first only in volatile/low-volume conditions by setting `profit_first_in_volatile_regime: true` and the USD thresholds (e.g. `500`).
 
 ### 2.5 Disk Space Exhaustion (Hetzner VM)
--   **Symptom**: "No space left on device" during deployment or log writing.
+-   **Symptom**: "No space left on device" during deployment (e.g. `git fetch`/unpack) or log writing.
 -   **Resolution**:
-    1.  Perform emergency pruning: `docker system prune -a -f`.
-    2.  Check for large unrotated logs in `/var/lib/docker/containers`.
-    3.  Verify that the deployment script is using `--no-cache` to prevent build-up of intermediate layers.
+    1.  **Find what’s using space (SSH to VM):**  
+       `sudo du -sh /var/lib/docker /home/deploy ~/trading-bot/logs ~/trading-bot/data ~/trading-bot/weekly_analysis`  
+       Then list Docker container log sizes (often **several GB each**):  
+       `sudo du -sh /var/lib/docker/containers/*/*-json.log`
+    2.  **Immediate fix – truncate Docker container logs (run on VM):**  
+       `sudo bash -c 'for f in /var/lib/docker/containers/*/*-json.log; do [ -f "$f" ] && truncate -s 0 "$f"; done'`  
+       Then free project data:  
+       `cd ~/trading-bot && rm -f archives/*.zip && find weekly_analysis -name "*.csv" -delete && find data/historical -name "*.csv" -delete`  
+       Then: `docker system prune -af` and re-run **Deploy to VM**.
+    3.  **Deploy workflow**: Each run deletes all `archives/*.zip`, 3-day-old CSVs, gzips old logs, **truncates Docker container logs &gt;10MB**, then docker prune. When free &lt;2GB it uses 1-day retention. Re-run **Deploy to VM** from the Actions tab.
+    4.  **Scripts (after next deploy):** `scripts/disk_audit_vm.sh` to inspect usage; `sudo bash scripts/disk_free_emergency_vm.sh` for full emergency cleanup.
+    5.  **Data archiver (in-bot)**: Daily; 3-day retention (1-day when disk &lt;2GB). Archives and deletes old CSVs and trade exports after upload to GDrive.
 
 ## 3. Monitoring Dashboards
 -   **Grafana (Port 3000)**:
@@ -173,9 +184,10 @@ The system uses a two-tier log management strategy:
     -   `truncate -s 0 logs/enhanced_decision_log.jsonl`
 
 ### 4.3 Cloud Archive Management (rclone)
-Phase 3 introduced automated cloud offloading to Google Drive.
--   **Config**: `rclone` is configured in the project root.
--   **Automation**: The `DailyOrchestrator` runs `run_data_archiver()` daily.
+Automated cloud offloading to Google Drive keeps the VM lean.
+-   **Config**: `rclone` remote `gdrive:TradingBotArchives`. On the Hetzner VM, add to `.env`:
+    `RCLONE_CONFIG_DIR=/home/deploy/.config/rclone` (directory containing `rclone.conf`; **not** the path to the file alone — see §2.10). Without this, the default `/home/gary/.config/rclone` is used, which may not exist on the VM and causes "Data Archiver sequence finished with issues."
+-   **Automation**: The `DailyOrchestrator` runs `run_data_archiver()` daily. Retention is **3 days** (files older than 3 days are zipped, uploaded, then deleted). When free disk &lt;2GB the archiver uses **1-day** retention and deletes any old zips in `archives/`. Archived: `data/historical`, `data/trades_exports`, `weekly_analysis` CSVs, rotated logs, sentinel reports.
 -   **Manual Backup**:
     ```bash
     # Manually trigger a cloud backup of the current month

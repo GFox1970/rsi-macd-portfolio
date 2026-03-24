@@ -32,6 +32,7 @@ This document serves as the hub for the following specialized guides:
 | [ML Operational Lifecycle (ALU)](ml_operational_lifecycle.md) | Deep dive into the Accelerated Learning Universe (ALU) and global multi-market handoff logic. |
 | [Vertex AI Setup Guide](vertex_ai_setup.md) | Complete guide for configuring Google Cloud Vertex AI authentication and quotas. |
 | [Developer Onboarding Guide](onboarding_guide.md) | Local setup, coding standards, and contribution guide. |
+| [Intraday profitability checklist](intraday_profitability_checklist.md) | Tracked implementation tasks: net-of-costs sim (`scripts/run_intraday_backtest.py`), execution, intraday risk, universe/regime, live-fill ML loop. |
 
 ## 5. Security & Observability
 -   **Security**: Minimalist attack surface with secrets managed via GitHub vault and environment-level isolation.

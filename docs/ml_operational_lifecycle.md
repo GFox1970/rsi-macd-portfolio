@@ -40,3 +40,23 @@ The orchestrator explicitly passes symbols and data paths to the ML initializati
 
 ## 3. Why this Matters
 Traditional models are trained once and then used for weeks. This "Operational Lifecycle" approach means your bot is **re-learning the market** at every major shift in global time zones. It doesn't just know "Technical Analysis"; it knows "Technical Analysis for the specific stocks trending *right now*."
+
+---
+
+## 4. Live fills, labels, and promotion (closed loop)
+
+### 4.1 Ground truth for P&amp;L (preferred order)
+1. **Broker round-trips** — `trading_bot/core/build_training_dataset.py` joins Alpaca (and preprocessed) orders with features and uses **`intraday_realized_pnl`** / **`outcome_label`**. This is the best approximation of **realized P&amp;L after fees** when order history is complete.
+2. **Decision log execution block** — After `ShadowResultTracker.enrich_filled_executions()`, each filled BUY can carry `result.execution` with **`entry_fill_price`**, **`signal_reference_price`**, **`slippage_bps`**, **`commission_entry_est_usd`**, and optional proxies **`labeled_pnl_proxy_1h` / `labeled_pnl_proxy_1d`** (from shadow backfill on the same row). Use these to bias training toward **observed fills**, not only bar mid.
+3. **Shadow / hindsight** — SKIPs and unfilled BUYs still get **1h counterfactual** prices from `shadow_result_tracker.backfill_results()` for opportunity-cost learning; they are **not** substitutes for realized trade labels.
+
+### 4.2 Export artifacts
+- `data/ml/perfect_trades.csv` — from `export_shadow_data.py` / `PerformanceAnalyzer.export_perfect_trades`.
+- `data/ml/decision_executions.csv` — from `ShadowResultTracker.export_fill_training_csv()` (run after enrich; `scripts/replay_recent_decisions.py` does this).
+
+### 4.3 Retrain entrypoints
+- Full pipeline: `ml_pipeline/run_pipeline.py`.
+- Log-driven replay: `scripts/replay_recent_decisions.py` → `ml_pipeline/training/train_mi_model.py --use-trade-outcomes --use-perfect-trades`.
+
+### 4.4 Model promotion (operational)
+Treat **`ML_MODEL_PATH`** updates as **manual promotion** until you confirm: walk-forward or paper metrics are not worse than the incumbent, and no regression on live-fill slippage vs training assumptions. There is no automatic canary in-repo; add CI or a shadow account if you need hard gates.
