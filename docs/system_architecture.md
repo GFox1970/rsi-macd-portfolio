@@ -108,10 +108,10 @@ graph TB
     - **Sentinel Agent**: Periodically scans `trading_bot.log`, `orchestrator.log`, and `enhanced_decision_log.jsonl`.
     - **Reality-Sync (New)**: Performs data freshness checks and portfolio reconciliation (Broker vs. Bot) to prevent silent failures or "Ghost" positions.
     - **Strategic Feedback**: Communicates directly with Tier 2 via `sentinel_feedback.json` to force parameter resets or adjust entry confidence floors when stagnation or execution failures are detected.
-    - **Healer Agent (Autonomous Repair)**:
+    - **Healer Agent (Guarded Repair)**:
         - **Directive Generation**: Translates Sentinel findings into actionable code-level directives.
-        - **Auto-Execution Pipeline**: Executes approved directives (`can_auto_apply: true`) automatically during orchestrator runs.
-        - **Closed-Loop Repair**: Changes are committed, pushed to the repository, and immediately active on the next run.
+        - **Auto-Execution Pipeline**: Can apply directives when `can_auto_apply: true` and `HEALER_AUTO_MERGE=true`.
+        - **Production default (May 2026):** VM `.env` sets **`HEALER_AUTO_MERGE=false`** — review fixes manually; a failed auto-fix once wiped `trading_agent.py` and halted the orchestrator (see [VM Recovery](investigations/2026-05-18_vm_recovery.md)).
         - **Safety Mechanisms**: 
             - Git branch isolation (`healer/auto-fix-{SYMBOL}-{TIMESTAMP}`)
             - Python syntax validation prior to commit
@@ -131,6 +131,7 @@ graph TB
         - **Zero-Cost Recovery**: If an execution is reported without a matching session-local opening trade, the system forces a $0.0 P&L by setting the `Avg Entry` == `Avg Exit`. This prevents "100% gain" phantoms from stale broker sessions.
         - **Anomaly Shield**: Validates broker-reported realized P&L by ensuring the reconstructed entry price is within 25% of current market price. High-variance discrepancies are automatically suppressed.
     - **Time-of-Day Awareness**: Autonomously gates execution per local market hours (LSE, TSX, etc.).
+    - **Intraday market data (IBKR)**: `data_factory.get_historical_data()` prefers the main IBKR session for live bars (UK `.L` and US); staleness guard in `trading_bot.py` blocks entries on delayed data.
 -   **Strategic Judgement Layer**: Decoupled module that combines ML scores, news sentiment, and macro bias. Includes **Strict Schema Gating**, **Volume Spread Analysis (VSA)**, and the **S-Tier Confluence Layer** to filter high-probability entries.
 -   **Exit Evaluator**: Responsible for same-day and overnight exit logic. Features a **"Grip & Harvest" (ADR Capture)** strategy and the **"The Runner" Protocol**: 
     - **Ultra-Aggressive Entry**: Buy buffers as low as 0.02% to ensure execution.

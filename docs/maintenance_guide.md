@@ -2,17 +2,21 @@
 
 ## 0. Daily Broker Checklist (Pre-Market)
 To ensure the bot executes correctly, perform these steps **30 minutes before market open**:
-1.  **IBKR Connectivity**:
+1.  **Disk space (VM)**:
+    -   `df -h /` — alert if **≥ 90%** used (see §2.5, §4.9).
+    -   Automated: `scripts/vm_disk_guard.sh` runs daily at **06:00 UTC** via cron (`logs/disk_guard.log`).
+2.  **IBKR Connectivity**:
     -   **Auto-Login**: The `ib-gateway` container is configured to log in automatically using **IBC**.
     -   **Monitoring**: You can monitor the Gateway screen via your browser:
-        -   **URL**: `http://<HETZNER_IP>:6080`
+        -   **URL**: `http://<HETZNER_IP>:6080` (Hetzner production: `37.27.6.119:6080`)
         -   **Password**: `secret` (unless changed in `docker-compose.yml`).
     -   **Manual Intervention**: Only required if 2FA is triggered during the daily restart.
-    -   Verify the API port is `4002`.
-2.  **Alpaca Status**:
+    -   **API ports**: Gateway exposes `4002` internally; the **trading-bot** connects to **`ib-gateway:8888`** (socat bridge) per `IBKR_PORT` in `.env` / `docker-compose.yml`.
+    -   **UK (LSE)**: Confirm **LSE Equities** market-data subscription is active in IBKR Client Portal (typically £1/mo). Live `.L` bars come from IBKR, not Yahoo.
+3.  **Alpaca Status**:
     -   Log into the Alpaca web dashboard.
     -   Verify your **Paper Trading** buying power is sufficient.
-3.  **Bot Health**:
+4.  **Bot Health**:
     -   Check the Streamlit dashboard for a "Connected" status.
     -   Verify that candidates were successfully loaded from the orchestrator.
 
@@ -43,9 +47,18 @@ If the bot is not placing trades or the dashboard is stale, follow these steps:
 -   **Symptom**: "Too Many Requests" in logs.
 -   **Resolution**: The bot will auto-retry with exponential backoff. If persistent, reduce `data_refresh_interval_hours` in `config/trading_config.json`.
 
-### 2.2 Stale Market Data
--   **Symptom**: RSI/MACD values are identical for multiple cycles.
--   **Resolution**: Check Polygon.io credit balance. Restart the `trading-bot` container to force a fresh data fetch.
+### 2.2 Stale Market Data (Staleness Guard)
+-   **Symptom**: Logs show `🚨 … EXTREMELY STALE` or `❌ … Skipping BUY EVALUATION`; RSI/MACD unchanged for multiple cycles.
+-   **Cause**: `trading_bot.py` blocks **entries** when the last bar is older than a threshold (5 min for live IBKR; 20 min for YFinance/Alpaca/delayed). **Exits** may still run on stale data (by design).
+-   **Data priority** (`trading_bot/core/data_factory.py`):
+    1.  **IBKR** — all symbols including UK (`.L`), via main connection (see §2.15).
+    2.  **Alpaca** — US only (no `.L` / international suffixes).
+    3.  **YFinance** — last resort (delayed); often fails when disk is full.
+-   **Resolution**:
+    1.  Confirm IBKR connected: `docker logs trading-bot --tail 30 | grep "Successfully connected"`.
+    2.  Confirm live UK bars: `grep "Using IBKR real-time" logs/trading_bot.log | grep "\.L" | tail`.
+    3.  If IBKR fetch fails, fix §2.15 before blaming the LSE subscription.
+    4.  Restart `trading-bot` after gateway login or code deploy.
 
 ### 2.3 PDT Violations
 -   **Symptom**: "Order rejected: Pattern Day Trader" in Alpaca.
@@ -140,20 +153,48 @@ If the bot is not placing trades or the dashboard is stale, follow these steps:
   So you can compare US vs UK with profit-first only in volatile/low-volume conditions by setting `profit_first_in_volatile_regime: true` and the USD thresholds (e.g. `500`).
 
 ### 2.5 Disk Space Exhaustion (Hetzner VM)
--   **Symptom**: "No space left on device" during deployment (e.g. `git fetch`/unpack) or log writing.
+-   **Symptom**: `No space left on device`, `disk I/O error` (YFinance), `docker exec` failures, unhealthy containers.
+-   **Typical culprits**: Docker container JSON logs under `/var/lib/docker/containers/` (requires **sudo** to truncate), unused Docker images, `~/.cache/ms-playwright`, large `logs/*.jsonl`.
+-   **Automated guard (deploy user, no sudo):**
+    -   Script: `scripts/vm_disk_guard.sh`
+    -   **Cron (production VM):** `0 6 * * * /home/deploy/trading-bot/scripts/vm_disk_guard.sh >> /home/deploy/trading-bot/logs/disk_guard.log 2>&1`
+    -   Runs cleanup only when disk use ≥ **92%** (`DISK_GUARD_THRESHOLD_PCT` to override).
+-   **Resolution:**
+    1.  **Inspect:** `bash scripts/disk_audit_vm.sh` (or `DEPLOY_DIR=/home/deploy/trading-bot bash scripts/disk_audit_vm.sh`).
+    2.  **No-sudo quick fix:** `bash scripts/vm_disk_guard.sh` (or lower threshold: `DISK_GUARD_THRESHOLD_PCT=80 bash scripts/vm_disk_guard.sh`).
+    3.  **Sudo (Docker logs — most effective):**
+       ```bash
+       sudo journalctl --vacuum-size=200M
+       sudo bash -c 'truncate -s 0 /var/lib/docker/containers/*/*-json.log'
+       df -h /
+       ```
+    4.  **Emergency:** `sudo bash scripts/disk_free_emergency_vm.sh`
+    5.  **Prevention:** `docker-compose.yml` sets `logging.options.max-size` / `max-file` on `trading-bot` and `ib-gateway`. Recreate containers after compose changes: `docker compose up -d --force-recreate trading-bot ib-gateway`.
+    6.  **Deploy workflow:** Also prunes archives, old CSVs, and large logs when **Deploy to VM** runs from GitHub Actions.
+-   **Incident reference:** [2026-05-18 VM Recovery](investigations/2026-05-18_vm_recovery.md)
+
+### 2.14 Healer Wiped `trading_agent.py` (Orchestrator Down)
+-   **Symptom**: `ImportError: cannot import name 'TradingAgent'` in `logs/orchestrator_auto.log`; `trading_bot/core/trading_agent.py` is **0 bytes** on the VM.
+-   **Cause**: Healer auto-fix failed on 2026-05-10 (`BRBY.L`, ambiguous search/replace) and left an empty file. Orchestrator cannot import; `latest_intraday_handoff.csv` goes stale.
 -   **Resolution**:
-    1.  **Find what’s using space (SSH to VM):**  
-       `sudo du -sh /var/lib/docker /home/deploy ~/trading-bot/logs ~/trading-bot/data ~/trading-bot/weekly_analysis`  
-       Then list Docker container log sizes (often **several GB each**):  
-       `sudo du -sh /var/lib/docker/containers/*/*-json.log`
-    2.  **Immediate fix – truncate Docker container logs (run on VM):**  
-       `sudo bash -c 'for f in /var/lib/docker/containers/*/*-json.log; do [ -f "$f" ] && truncate -s 0 "$f"; done'`  
-       Then free project data:  
-       `cd ~/trading-bot && rm -f archives/*.zip && find weekly_analysis -name "*.csv" -delete && find data/historical -name "*.csv" -delete`  
-       Then: `docker system prune -af` and re-run **Deploy to VM**.
-    3.  **Deploy workflow**: Each run deletes all `archives/*.zip`, 3-day-old CSVs, gzips old logs, **truncates Docker container logs &gt;10MB**, then docker prune. When free &lt;2GB it uses 1-day retention. Re-run **Deploy to VM** from the Actions tab.
-    4.  **Scripts (after next deploy):** `scripts/disk_audit_vm.sh` to inspect usage; `sudo bash scripts/disk_free_emergency_vm.sh` for full emergency cleanup.
-    5.  **Data archiver (in-bot)**: Daily; 3-day retention (1-day when disk &lt;2GB). Archives and deletes old CSVs and trade exports after upload to GDrive.
+    1.  Restore from git: `git fetch origin main && git reset --hard origin/main` in `/home/deploy/trading-bot`.
+    2.  Set **`HEALER_AUTO_MERGE=false`** in VM `.env` (production default after May 2026 recovery).
+    3.  Re-run orchestrator: `./scripts/run_orchestrator.sh` or wait for cron.
+    4.  Do **not** enable Healer auto-merge on production without review.
+
+### 2.15 IBKR Historical Fetch Timeouts (UK + US)
+-   **Symptom**: `Threaded IBKR fetch failed for *.L`, then `Using YFinance fallback (delayed)`; no UK trades despite active LSE subscription.
+-   **Cause (fixed May 2026):** Each bar request opened a **new** IBKR connection with a random `clientId`, overwhelming the gateway (`TimeoutError` after connect/disconnect).
+-   **Resolution (current code):** `IBKRBroker.get_historical_data()` uses the **main** session on the trading-bot thread (`IBKR_HISTORICAL_USE_MAIN=true`, default). Verify:
+    ```bash
+    grep "Using IBKR real-time" logs/trading_bot.log | grep "\.L" | tail -5
+    ```
+-   **Streamlit/UI only:** Set `IBKR_HISTORICAL_ALLOW_EPHEMERAL=true` if a secondary thread must fetch bars (not recommended on production VM).
+
+### 2.16 Buy Path Crash — `mock_support_resistance` / `TradingAgent`
+-   **Symptom**: `Error in _process_symbol_buy_path: name 'mock_support_resistance' is not defined` for every symbol.
+-   **Cause:** `trading_agent.py` called a helper defined only in `trading_bot.py` (import cycle). Broke all new entries until May 2026 fix.
+-   **Resolution:** Ensure `trading_agent.py` defines `_support_resistance()` locally (commit `5713c568+`). Deploy and `docker compose restart trading-bot`.
 
 ## 3. Monitoring Dashboards
 -   **Grafana (Port 3000)**:
@@ -173,8 +214,16 @@ docker system prune -a -f
 # Specific project cleanup
 ./scripts/cleanup_docker.sh
 ```
-The Hetzner VM has a 40GB limit. Total reclamation via `prune -a -f` typically yields 10-15GB.
-This removes dangling images and stopped containers to reclaim disk space.
+The Hetzner production VM has a **38GB** root volume (`/dev/sda1`). Docker images alone can use ~20GB; **container JSON logs** often fill the rest until truncated with sudo (see §2.5).
+
+### 4.9 Automated Disk Guard (Cron)
+Installed on the production VM (`deploy` user crontab):
+```cron
+0 6 * * * /home/deploy/trading-bot/scripts/vm_disk_guard.sh >> /home/deploy/trading-bot/logs/disk_guard.log 2>&1
+```
+- **Manual run:** `bash /home/deploy/trading-bot/scripts/vm_disk_guard.sh`
+- **Log:** `logs/disk_guard.log`
+- **Note:** Does not replace periodic **sudo** Docker log truncation when disk is critically full; use §2.5 step 3.
 
 ### 4.2 Log Management & Rotation
 The system uses a two-tier log management strategy:
@@ -228,14 +277,16 @@ Phase 3.5 introduced the Sentinel Agent for autonomous maintenance and **Reality
 - **Strategy Auditing**: If the Sentinel flags "Strategic Stagnation," it means the bot's parameter tuning is not producing trades. Review `logs/control_audit_log.jsonl` for details.
 
 ### 4.7 Healer Autonomous Repair
-The Healer Agent autonomously applies code fixes based on Sentinel findings, closing the loop between detection and resolution.
+The Healer Agent can apply code fixes based on Sentinel findings. **On the production VM, auto-merge is disabled** (`HEALER_AUTO_MERGE=false` in `.env`) after a May 2026 incident where a failed fix **zeroed `trading_agent.py`** and stopped the orchestrator for days.
 
-**How It Works**:
+**How It Works** (when enabled):
 1. **Detection**: Sentinel identifies a logic gap or performance issue.
 2. **Fix Generation**: Healer generates a specific code patch.
 3. **Auto-Application**: The patch is applied to a new branch, syntax-checked, and committed.
-4. **Auto-Merge & Push**: If validation passes, the branch is **automatically merged to `main` and pushed to GitHub**.
+4. **Auto-Merge & Push** (optional): If `HEALER_AUTO_MERGE=true` and validation passes, merged to `main` and pushed.
 5. **Deployment**: The VM pulls the updated code (via standard git operations) for the next run.
+
+**Production recommendation:** Keep `HEALER_AUTO_MERGE=false`. Review directives in the dashboard; merge fixes via PR or manual `git pull` after inspection.
 
 **Monitoring Execution**:
 - **Dashboard**: "Health & Audit" → "Healer Directives" tab updates in real-time.

@@ -58,7 +58,13 @@ We use a simplified **Gitflow** model:
 5.  **Verify**: Ensure `./venv/bin/pytest` passes 100%.
 6.  **PR**: Open a Pull Request against the `develop` branch. Tag @Gary for review.
 
-## 6. Resources
+## 6. Production VM (Hetzner)
+-   **Path:** `/home/deploy/trading-bot` — SSH host `hetzner` (see Hetzner deploy skill / `~/.ssh/config`).
+-   **After merging to `main`:** `git pull` or `git reset --hard origin/main` on the VM; restart `trading-bot` / `ib-gateway` if `docker-compose.yml` or `trading_bot/` changed.
+-   **Disk:** `scripts/vm_disk_guard.sh` runs at **06:00 UTC** via cron; see [Maintenance Guide](maintenance_guide.md) §2.5, §4.9.
+-   **Incident log:** [2026-05-18 VM Recovery](investigations/2026-05-18_vm_recovery.md).
+
+## 7. Resources
 -   **Vertex AI Setup Guide**: [Vertex AI Setup](vertex_ai_setup.md)
 -   **Alpaca API Documentation**: [https://alpaca.markets/docs/](https://alpaca.markets/docs/)
 -   **XGBoost Documentation**: [https://xgboost.readthedocs.io/](https://xgboost.readthedocs.io/)

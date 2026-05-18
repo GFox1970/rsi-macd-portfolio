@@ -27,7 +27,8 @@ This document serves as the hub for the following specialized guides:
 | [API & Integration Specification](api_spec.md) | Alpaca, IBKR, and Polygon.io implementation details. |
 | [Testing Strategy Document](testing_strategy.md) | Unit, integration, and E2E testing workflows. |
 | [Deployment & Release Guide](deployment_guide.md) | Versioning and rollout/rollback procedures. |
-| [Support & Maintenance Guide](maintenance_guide.md) | Troubleshooting, monitoring, and operational runbooks. |
+| [Support & Maintenance Guide](maintenance_guide.md) | Troubleshooting, monitoring, disk guard cron, and operational runbooks. |
+| [VM Recovery (May 2026)](investigations/2026-05-18_vm_recovery.md) | Disk full, Healer incident, IBKR data fix, production cron. |
 | [ML Strategy & Performance Analysis](ml_strategy_analysis.md) | Overview of XGBoost architecture, gated scaling, and performance efficiency metrics. |
 | [ML Operational Lifecycle (ALU)](ml_operational_lifecycle.md) | Deep dive into the Accelerated Learning Universe (ALU) and global multi-market handoff logic. |
 | [Vertex AI Setup Guide](vertex_ai_setup.md) | Complete guide for configuring Google Cloud Vertex AI authentication and quotas. |

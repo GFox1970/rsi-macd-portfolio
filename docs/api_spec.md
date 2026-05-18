@@ -13,8 +13,13 @@
 
 ### 1.2 Interactive Brokers (IBKR)
 -   **Integration Method**: IBKR Gateway via `ib_insync` (TWS API).
--   **Host/Port**: `ib-gateway:8888` (within Docker network, overridable via `IBKR_HOST`/`IBKR_PORT`).
+-   **Host/Port**: `ib-gateway:8888` (within Docker network, overridable via `IBKR_HOST`/`IBKR_PORT`). Gateway container also exposes `4002`; bot uses **8888** (socat) by default.
 -   **Authentication**: Standard IBKR credentials configured on the Gateway container; the bot connects via the TWS API, not Client Portal REST.
+-   **Market data type**: On connect, `reqMarketDataType(1)` (live). UK LSE requires an active **LSE Equities** subscription in IBKR.
+-   **Historical bars (intraday loop)**:
+    -   `IBKRBroker.get_historical_data()` — uses the **persistent** `self.ib` connection (`reqHistoricalData` on main thread). Default: `IBKR_HISTORICAL_USE_MAIN=true`.
+    -   Do not spawn ephemeral connections per symbol in production (caused gateway timeouts before May 2026; see [VM Recovery](investigations/2026-05-18_vm_recovery.md)).
+    -   Unified loader: `get_historical_data()` in `data_factory.py` → tagged `source=IBKR` in DataFrame attrs for staleness logic in `trading_bot.py`.
 -   **Execution Flow**:
     -   `BrokerRouter` uses `IBKRBroker` to submit orders and read positions using the TWS API (`ib_insync`).
     -   A long-lived **account summary subscription** (`reqAccountSummary`) provides:
@@ -25,6 +30,9 @@
     -   The Streamlit dashboard reads these live values via `IBKRBroker.get_account_summary()` and displays **NAV (equity)**, **cash**, **capital active**, and **Day P&L** directly from IBKR, with order-based P&L only used for historical period summaries and as a fallback.
 
 ## 2. Market Data Providers
+
+### 2.0 Unified loader (runtime)
+See `trading_bot/core/data_factory.py` — priority **IBKR → Alpaca (US) → YFinance**. International symbols (e.g. `*.L`) require IBKR.
 
 ### 2.1 Polygon.io
 -   **Authentication**: Bearer token via `apiKey` query parameter.

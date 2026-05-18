@@ -11,7 +11,8 @@ A fully autonomous, machine-learning-enhanced trading system designed for consis
 - **Management Insight**: High-fidelity JSONL decision logs displayed in a premium Streamlit dashboard.
 - **Multi-Broker**: Unified routing for Alpaca (US), IBKR (Global), and Crypto.
 - **Sentinel SRE & Reality-Sync**: Autonomous health monitoring and "Self-Healing" agent. Now includes **Reality-Sync** for detecting stale logs or portfolio drift (bot vs. broker).
-- **Self-Healing Agent**: Identifies gaps, generates fixes, and **automatically applies code repairs** overnight via a secure VM-to-GitHub pipeline.
+- **Self-Healing Agent (Guarded)**: Sentinel + Healer can propose code fixes; **production VM keeps `HEALER_AUTO_MERGE=false`** after a May 2026 incident — review before merging.
+- **Ops hardening**: Daily `vm_disk_guard.sh` cron, Docker log rotation, IBKR main-session historical data for UK/US live bars.
 
 ## 📂 Documentation Hub
 For detailed guides, please refer to the `docs/` folder:
@@ -22,7 +23,7 @@ For detailed guides, please refer to the `docs/` folder:
 | **Vision & Goals** | [Product Requirements (PRD)](docs/prd.md) |
 | **Architecture** | [3-Tier System Architecture](docs/system_architecture.md) |
 | **Deployment** | [DevOps & Infrastructure Guide](docs/devops_guide.md) |
-| **Operations** | [Support & Maintenance Guide](docs/maintenance_guide.md) |
+| **Operations** | [Support & Maintenance Guide](docs/maintenance_guide.md) · [VM Recovery May 2026](docs/investigations/2026-05-18_vm_recovery.md) |
 | **Portfolio** | [Visual Showcase & AI Residency](#-visual-portfolio--ai-residency) |
 
 ## 🖼️ Visual Portfolio & AI Residency

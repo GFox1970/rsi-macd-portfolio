@@ -5,8 +5,12 @@ The system utilizes a hybrid data architecture, combining unstructured **JSONL**
 
 ## 2. Ingestion Layer
 Data is ingested from four primary sources:
--   **Market Data (OHLCV)**: Ingested via **yfinance** (Preparation/Training) and **Alpaca** (Historical Analysis). Used for indicator calculation and strategy charting.
--   **Broker State (High-Fidelity)**: Live positions and current market prices fetched via Alpaca/IBKR. **Primary source of truth for real-time exit decisions (TP/SL).**
+-   **Market Data (OHLCV) — intraday execution** (`trading_bot/core/data_factory.py`):
+    1.  **IBKR** (primary) — US and international (e.g. `.L` LSE); real-time minute bars via main `IBKRBroker` session.
+    2.  **Alpaca** — US symbols only when IBKR unavailable.
+    3.  **YFinance** — delayed fallback; avoid for live entries when staleness guard is active.
+-   **Market Data — preparation/training**: **yfinance** and cached CSVs under `data/historical` (orchestrator / weekly analysis). Yahoo errors on bare tickers (e.g. `STJ` vs `STJ.L`) do not block IBKR execution paths.
+-   **Broker State (High-Fidelity)**: Live positions and prices via Alpaca/IBKR. **Primary source of truth for real-time exit decisions (TP/SL).**
 -   **Macro Indicators**: FRED (Federal Reserve Economic Data) for VIX and interest rate series.
 
 ## 3. Data Storage Models

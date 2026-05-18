@@ -33,6 +33,22 @@ A comprehensive monitoring suite is built into the system:
 - **Persistence**: All critical data (ML models, decision logs, positions) is stored in host-mounted volumes (`./logs`, `./ml_db`, `./data`).
 - **Backups**: Automated cron jobs on the VM take periodic snapshots of the `./ml_db` and `./logs` directories.
 - **Rollback**: Triggered by redeploying the previous stable Git commit via the `deploy-to-vm.yml` workflow.
+- **Disk exhaustion (May 2026 playbook):** See [investigations/2026-05-18_vm_recovery.md](investigations/2026-05-18_vm_recovery.md). Quick steps: `vm_disk_guard.sh`, sudo truncate Docker logs, `git reset --hard origin/main`, recreate `trading-bot` / `ib-gateway`.
+
+## 6.1 Production VM maintenance cron
+| Schedule (UTC) | Script | Log |
+| :--- | :--- | :--- |
+| `0 6 * * *` | `scripts/vm_disk_guard.sh` | `logs/disk_guard.log` |
+| `30 22 * * 0-4`, `0 07 * * 1-5`, … | `scripts/run_orchestrator.sh` | `logs/orchestrator_cron.log` |
+
+Install disk guard: `(crontab -l; echo "0 6 * * * /home/deploy/trading-bot/scripts/vm_disk_guard.sh >> /home/deploy/trading-bot/logs/disk_guard.log 2>&1") | crontab -`
+
+## 6.2 Docker log rotation (compose)
+`docker-compose.yml` limits container log growth:
+- `trading-bot`: `max-size: 50m`, `max-file: 3`
+- `ib-gateway`: `max-size: 30m`, `max-file: 3`
+
+Apply after compose changes: `docker compose up -d --force-recreate trading-bot ib-gateway`.
 
 ## 7. Local Data Synchronization (Harvesting)
 To conduct realistic local backtests, retrain models, or debug using the latest production context, you must periodically synchronize the local repository with the VM's active datasets and ML files.

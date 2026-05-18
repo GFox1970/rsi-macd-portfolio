@@ -28,9 +28,19 @@ This script handles container cleanup and sequential service startup.
 
 ## 5. Scheduling & Contingency
 -   **Master Scheduler**: GitHub Actions (`scheduled-orchestrator.yml`) is the primary driver for all market sessions.
--   **VM Fallback**: The VM maintains an active `crontab` that mirrors the GHA schedule.
+-   **VM Fallback**: The VM maintains an active `crontab` that mirrors the GHA schedule (see `scripts/run_orchestrator.sh` entries in `logs/orchestrator_cron.log`).
+-   **Disk guard cron (production):** Daily at **06:00 UTC** — `scripts/vm_disk_guard.sh` → `logs/disk_guard.log`. See [Maintenance Guide — §4.9](maintenance_guide.md).
 -   **GHA-Check Logic**: The VM orchestrator utilizes a 3-hour data freshness check. If GHA successfully syncs fresh data, the VM's cron job terminates early (detecting the data is fresh). If GHA fails, the VM cron job detects stale data and automatically begins local harvesting as a fallback.
--   **Timezone**: The VM is fixed to `UTC/GMT` to unify scheduling across GHA and production.
+-   **Timezone**: The VM is fixed to **UTC** to unify scheduling across GHA and production.
+
+### 5.1 VM code sync (after `main` push)
+Production path: `/home/deploy/trading-bot` (SSH host alias `hetzner`).
+```bash
+cd /home/deploy/trading-bot
+git fetch origin main && git reset --hard origin/main
+docker compose up -d --force-recreate trading-bot ib-gateway   # apply compose/logging changes
+```
+Do not overwrite the VM `.env` from CI (secrets and `HEALER_AUTO_MERGE=false` are maintained manually). See [2026-05-18 VM Recovery](investigations/2026-05-18_vm_recovery.md).
 
 ## 6. Rollback Procedures
 -   **Automated Rollback**: Redeploy the previous Git tag via the GitHub Actions UI.
@@ -40,8 +50,9 @@ This script handles container cleanup and sequential service startup.
     3.  Run `git checkout <tag_id>`.
     4.  Restart services: `docker compose up -d`.
 
-## 5. Environment Configuration
--   **VM Spec**: Ubuntu 22.04 LTS, 4 vCPUs, 8GB RAM.
--   **Storage**: 80GB Block Storage for logs and ML databases.
--   **Networking**: Inbound traffic restricted to port 10000 (Monitoring) and 8501 (Dashboard) with IP whitelisting.
--   **Timezone**: Fixed to `America/New_York` to align with NYSE market hours.
+## 7. Environment Configuration
+-   **VM Spec**: Hetzner — Ubuntu, 4 vCPU / 4GB RAM class (`ubuntu-4gb-hel1-8`), public IP `37.27.6.119`.
+-   **Storage**: **38GB** root volume (`/dev/sda1`). Monitor with `df -h /`; use `vm_disk_guard.sh` and periodic sudo Docker log truncation (see [Maintenance Guide](maintenance_guide.md)).
+-   **Deploy user**: `deploy` at `/home/deploy/trading-bot`.
+-   **Networking**: Dashboard Streamlit `8501`, webserver `10000`, IB Gateway VNC `6080`, Grafana `3000` (restrict via firewall as needed).
+-   **Timezone**: **UTC** on the VM for cron and orchestrator schedules.
