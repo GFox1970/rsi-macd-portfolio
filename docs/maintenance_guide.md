@@ -60,6 +60,23 @@ If the bot is not placing trades or the dashboard is stale, follow these steps:
     3.  If IBKR fetch fails, fix §2.15 before blaming the LSE subscription.
     4.  Restart `trading-bot` after gateway login or code deploy.
 
+### 2.2.1 Trading regions (LSE focus / US live scanning)
+-   **Purpose**: When US intraday data is stale or unavailable, run **LSE (`.L`) only** for ADV candidates and live buy scans. US open positions still receive **exit** evaluation.
+-   **Dashboard**: Control Center → **US live scanning (Alpaca)** toggle. Off = LSE-only mode; Alpaca (US Operations) card is hidden; hero metrics show IBKR only.
+-   **Config** (`trading_config.json` → `day_trading.trading_regions`):
+    ```json
+    "trading_regions": {
+      "active": ["L"],
+      "us_live_scanning_enabled": false
+    }
+    ```
+-   **Env overrides** (optional on VM `.env`):
+    -   `US_LIVE_SCANNING_ENABLED=false` — same as toggle off.
+    -   `TRADING_REGIONS=L` — restrict active regions (when US scanning is on).
+-   **Code**: `trading_bot/core/trading_regions.py`; filters in `get_symbols_to_trade()` and `weekly_analysis/find_top_day_trading_candidates.py`.
+-   **Logs**: On bot start: `Trading regions: LSE (.L) only — US live scanning off`. During session: `Buy path: N regional candidates (LSE (.L) only — US live scanning off)`.
+-   **Re-enable US**: Turn toggle **on** in Control Center (or set `us_live_scanning_enabled: true` and `active: ["US", "L"]`) after IBKR/Alpaca US bars are reliably live (no routine `Skipping BUY EVALUATION` on stale data).
+
 ### 2.3 PDT Violations
 -   **Symptom**: "Order rejected: Pattern Day Trader" in Alpaca.
 -   **Resolution**: Check `pdt_state.json`. If it's out of sync with your broker, manually update the `day_trade_count` to match reality. Note: The bot now allows reversals on profits >3% even with 1 day trade remaining.

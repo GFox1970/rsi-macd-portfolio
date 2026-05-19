@@ -34,7 +34,7 @@ The following evidence highlights the technical depth and operational transparen
 
 ````carousel
 ![01 - Global Strategy & Exposure](docs/portfolio_images/01_dashboard_overview.png)
-**Control Center**: The multi-broker dashboard provides a high-level view of portfolio intelligence, equity curves, and real-time P&L tracking across Alpaca and IBKR.
+**Control Center**: The multi-broker dashboard provides portfolio intelligence, equity curves, and real-time P&L. Use **US live scanning (Alpaca)** to focus on LSE (`.L`) only when US data is stale—the Alpaca card collapses until you re-enable.
 <!-- slide -->
 ![02 - Intraday Execution Map](docs/portfolio_images/02_intraday_analysis.png)
 **Performance Audit**: Detailed performance analysis comparing **Actual vs. Potential P&L**. This section measures the "Capture Gap" — proving execution efficiency against a feasible best-case simulation.

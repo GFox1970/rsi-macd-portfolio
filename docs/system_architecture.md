@@ -131,6 +131,7 @@ graph TB
         - **Zero-Cost Recovery**: If an execution is reported without a matching session-local opening trade, the system forces a $0.0 P&L by setting the `Avg Entry` == `Avg Exit`. This prevents "100% gain" phantoms from stale broker sessions.
         - **Anomaly Shield**: Validates broker-reported realized P&L by ensuring the reconstructed entry price is within 25% of current market price. High-variance discrepancies are automatically suppressed.
     - **Time-of-Day Awareness**: Autonomously gates execution per local market hours (LSE, TSX, etc.).
+    - **Trading regions**: `trading_regions.py` + `day_trading.trading_regions` in config filter the ADV watchlist and live **buy** scan to active regions (e.g. `L` only when US live scanning is off). Control Center toggle persists `us_live_scanning_enabled` and collapses the Alpaca dashboard card when US is paused.
     - **Intraday market data (IBKR)**: `data_factory.get_historical_data()` prefers the main IBKR session for live bars (UK `.L` and US); staleness guard in `trading_bot.py` blocks entries on delayed data.
 -   **Strategic Judgement Layer**: Decoupled module that combines ML scores, news sentiment, and macro bias. Includes **Strict Schema Gating**, **Volume Spread Analysis (VSA)**, and the **S-Tier Confluence Layer** to filter high-probability entries.
 -   **Exit Evaluator**: Responsible for same-day and overnight exit logic. Features a **"Grip & Harvest" (ADR Capture)** strategy and the **"The Runner" Protocol**: 
