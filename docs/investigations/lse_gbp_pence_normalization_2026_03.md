@@ -34,6 +34,16 @@
 
 ---
 
+## 2026-06-02: Alpha Optimizer still 100× (AZN.L £25,432 for 2 shares)
+
+**Symptom:** Avg cost ~£134 (correct) but portfolio value £25,432; P&L +9000%+; chart Y-axis ~12k–14k while header shows £127.
+
+**Cause:** `fetch_open_positions()` only normalized when `currency == "GBP"`; IBKR often reports `GBp`. Entry was scaled in `app.py` (`_entry_avg > 1000`) but `_comp_price` used raw `market_price` in pence (~12718). Chart OHLC was not scaled.
+
+**Fix:** Use `lse_price_to_gbp_pounds` / `normalize_lse_price_pair` from `trading_bot/core/lse_sell.py` in `orders_dashboard.py` (by `.L` symbol, not currency) and Alpha Optimizer (`trading_bot/core/alpha_optimizer_ui.py`) for chart OHLC and orchestrator target display. Listing currency uses `symbol_listing_currency()` in `fx_utils.py` (£ for `.L`).
+
+---
+
 ## 2026-03-17: Bot trading logic fix (BLOW-OFF TOP / Parabolic Hold)
 
 **Issue:** Logs showed "BLOW-OFF TOP DETECTED (+9720% vs ADR)" and "Parabolic Hold active. Profit +10693%" for LSE stocks. These percentages are impossible and caused by the same pence/pounds mix: `current_price` from IBKR historical bars (pence) vs `entry_price` from broker position (pounds).

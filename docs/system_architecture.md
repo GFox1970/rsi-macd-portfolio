@@ -158,4 +158,4 @@ graph TB
 -   **Host**: Linux VM.
 -   **Persistence**: Local `data/` and `logs/` volumes with monthly cloud offloading. 
     - **Availability**: Standardized on `rw` (Read-Write) volume mounts across all services to ensure persistence of broker targets, recovery signals, and audit logs.
--   **Monitoring**: Streamlit Dashboard for real-time visibility into the "Brain" (Strategic Judgement).
+-   **Monitoring**: Streamlit Dashboard for real-time visibility into the "Brain" (Strategic Judgement). **Alpha Optimizer** tab visualises the orchestrator top-20 ADR swing plan (not portfolio holdings); **Strategic Holdings** covers book P&amp;L. See [dashboard_alpha_optimizer.md](dashboard_alpha_optimizer.md).

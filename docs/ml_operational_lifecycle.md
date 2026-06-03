@@ -60,3 +60,19 @@ Traditional models are trained once and then used for weeks. This "Operational L
 
 ### 4.4 Model promotion (operational)
 Treat **`ML_MODEL_PATH`** updates as **manual promotion** until you confirm: walk-forward or paper metrics are not worse than the incumbent, and no regression on live-fill slippage vs training assumptions. There is no automatic canary in-repo; add CI or a shadow account if you need hard gates.
+
+### 4.5 Planned vs actual (`strategy_plan`)
+
+When the intraday engine computes ADR buy/sell/stop targets for a **BUY** decision, it attaches the same plan the dashboard shows:
+
+| Field | Written by | Stored in |
+| :--- | :--- | :--- |
+| `strategy_plan.buy_target` | `TradingBot._process_symbol_buy_path` → `EnhancedDecisionLogger.update_strategy_plan()` | `logs/enhanced_decision_log.jsonl` |
+| `strategy_plan.sell_target` | same | same + merged into SQLite `ml_rows.json_row` |
+| `strategy_plan.stop_target`, `adr_pct`, `source` | same | same |
+
+**Nightly shadow backfill** (`ml_pipeline/shadow_result_tracker.py`) prefers `strategy_plan.buy_target` over bar mid when labelling unfilled/skipped BUYs with `pnl_after_1h`, and sets `planned_harvest_hit_1h` when the 1h price reaches `sell_target`.
+
+**Dashboard audit:** Alpha Optimizer → *Planned vs Actual* reads the same log rows the orchestrator pipeline trains on (see [dashboard_alpha_optimizer.md](dashboard_alpha_optimizer.md)).
+
+This keeps UI “what we planned” aligned with ML “what we would have made at the plan” without a separate export format.

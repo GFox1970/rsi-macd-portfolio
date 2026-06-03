@@ -23,7 +23,9 @@ Data is ingested from four primary sources:
     -   `market_context`: Indicators (RSI, MACD), OHLCV, Sentiment.
     -   `portfolio_state`: Buying power, current holdings.
     -   `decision`: Action (BUY/SKIP/SELL), Confidence, Reasoning.
-    -   `order_outcome`: Fill price, qty, status.
+    -   `strategy_plan`: Optional ADR targets at decision time (`buy_target`, `sell_target`, `stop_target`, `adr_pct`, `source`) — written after target calculation in `TradingBot`; used by shadow backfill and the Alpha Optimizer planned-vs-actual panel.
+    -   `order_outcome`: Fill price, qty, status, `signal_reference_price`, `slippage_bps`.
+    -   `result`: Shadow prices (`price_after_1h`), proxies (`pnl_after_1h`), optional `execution` block after enrich.
 
 ### 3.2 IBKR Execution Log (Persistence)
 -   **Format**: JSONL

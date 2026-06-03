@@ -34,6 +34,8 @@ This document serves as the hub for the following specialized guides:
 | [Vertex AI Setup Guide](vertex_ai_setup.md) | Complete guide for configuring Google Cloud Vertex AI authentication and quotas. |
 | [Developer Onboarding Guide](onboarding_guide.md) | Local setup, coding standards, and contribution guide. |
 | [Intraday profitability checklist](intraday_profitability_checklist.md) | Tracked implementation tasks: net-of-costs sim (`scripts/run_intraday_backtest.py`), execution, intraday risk, universe/regime, live-fill ML loop. |
+| [Alpha Optimizer (Top-20 monitor)](dashboard_alpha_optimizer.md) | Streamlit tab: orchestrator ADR bands, strategy board, planned vs actual vs ML log. |
+| [LSE scalper operations](lse_scalper_operations.md) | Bot-managed IBKR entries, gated legacy exits, VM cron/archiver. |
 
 ## 5. Security & Observability
 -   **Security**: Minimalist attack surface with secrets managed via GitHub vault and environment-level isolation.
