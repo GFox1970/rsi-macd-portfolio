@@ -39,9 +39,24 @@ A comprehensive monitoring suite is built into the system:
 | Schedule (UTC) | Script | Log |
 | :--- | :--- | :--- |
 | `0 6 * * *` | `scripts/vm_disk_guard.sh` | `logs/disk_guard.log` |
-| `30 22 * * 0-4`, `0 07 * * 1-5`, … | `scripts/run_orchestrator.sh` | `logs/orchestrator_cron.log` |
+| `0 7 * * 1-5` | `scripts/run_orchestrator.sh` | `logs/orchestrator_auto.log` |
+| **`0 8 * * 1-5`** | **`scripts/run_session_momentum_scan.sh`** | **`logs/session_momentum_scan.log`** |
+| **`*/15 8-16 * * 1-5`** | **`scripts/run_broker_coach.sh`** | **`logs/broker_coach_cron.log`** |
 
-Install disk guard: `(crontab -l; echo "0 6 * * * /home/deploy/trading-bot/scripts/vm_disk_guard.sh >> /home/deploy/trading-bot/logs/disk_guard.log 2>&1") | crontab -`
+The session momentum scan must run **at or just after 08:00 UTC** (before LSE open at 08:00) to give the bot a fresh ranked watchlist. The bot falls back to the structural CSV automatically if the momentum file is > 4 hours old.
+
+Broker Coach runs on the **host** (not inside the scalper container) every 15 minutes during the LSE session. See [broker_coach.md](broker_coach.md).
+
+Install all four crons:
+```bash
+(crontab -l; cat <<'CRONS'
+0 6 * * * /home/deploy/trading-bot/scripts/vm_disk_guard.sh >> /home/deploy/trading-bot/logs/disk_guard.log 2>&1
+0 7 * * 1-5 /home/deploy/trading-bot/scripts/run_orchestrator.sh >> /home/deploy/trading-bot/logs/orchestrator_auto.log 2>&1
+0 8 * * 1-5 /home/deploy/trading-bot/scripts/run_session_momentum_scan.sh >> /home/deploy/trading-bot/logs/session_momentum_scan.log 2>&1
+*/15 8-16 * * 1-5 /home/deploy/trading-bot/scripts/run_broker_coach.sh >> /home/deploy/trading-bot/logs/broker_coach_cron.log 2>&1
+CRONS
+) | crontab -
+```
 
 ## 6.2 Docker log rotation (compose)
 `docker-compose.yml` limits container log growth:

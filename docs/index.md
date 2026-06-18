@@ -36,6 +36,9 @@ This document serves as the hub for the following specialized guides:
 | [Intraday profitability checklist](intraday_profitability_checklist.md) | Tracked implementation tasks: net-of-costs sim (`scripts/run_intraday_backtest.py`), execution, intraday risk, universe/regime, live-fill ML loop. |
 | [Alpha Optimizer (Top-20 monitor)](dashboard_alpha_optimizer.md) | Streamlit tab: orchestrator ADR bands, strategy board, planned vs actual vs ML log. |
 | [LSE scalper operations](lse_scalper_operations.md) | Bot-managed IBKR entries, gated legacy exits, VM cron/archiver. |
+| [Broker v2 — LSE Momentum v1](broker_v2_lse_momentum.md) | Active intraday strategy (ORB + momentum), safety guards, go-live gate. |
+| [Broker Coach (Phase 1)](broker_coach.md) | Proactive session monitor: docker log parse, momentum refresh, bounded tuning. |
+| [Candidate selection approaches](candidate_selection_approaches.md) | Structural vs session-momentum vs catalyst; competition scoring; `meta.approach` tagging. |
 
 ## 5. Security & Observability
 -   **Security**: Minimalist attack surface with secrets managed via GitHub vault and environment-level isolation.

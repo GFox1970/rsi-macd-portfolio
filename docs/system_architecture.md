@@ -80,6 +80,8 @@ graph TB
         - **Intelligence Execution**: Performs Post-Mortem, AI Strategic Planning, and ML training/inference.
         - **Freshness**: Maintains strict 3-minute staleness limits for intraday data and 3-hour session limits for candidate discovery.
 2.  **Market Execution (T2)**:
+    - **LSE Momentum v1 (Broker v2, May 2026)**: When `strategy.active` is `lse_momentum_v1`, LSE buy path uses `lse_momentum_v1.py` (ORB + volume, fixed stop/target). Legacy Strategic Judgement, ML gating, and agent stack are **bypassed for `.L` entries**. Safety guards in `buy_guards.py`: hard legacy block, post-stop buy cooldown (`cooldown_minutes_after_stop`), coach `alert_legacy_leak` if legacy BUY lines appear in scalper logs. See [broker_v2_lse_momentum.md](broker_v2_lse_momentum.md).
+    - **Broker Coach (Phase 1)**: Host cron (`run_broker_coach.sh`, */15 8–16 UTC) tails `docker logs trading-bot-scalper`, auto-refreshes stale momentum CSVs, applies bounded pilot overrides to `data/shared/v1_pilot_overrides.json`. No LLM. See [broker_coach.md](broker_coach.md).
     - **Live Learning (Agility)**: `TradingBot` performs `_reload_config()` per loop to pick up Tier 1 optimizations (Adaptive Optimizer) without restart.
     - **Signals**: Bot calculates technindicators and fetches macro regime via `MacroAnalyzer`. It applies the **S-Tier Confluence Layer** (`OrderFlowAnalyzer`, `StructureMonitor`, `VWAPAnalyzer`) to validate entries.
     - **Sizing (Hybrid Conviction)**: `TradingAgent` applies **Tiered Sizing** based on signal strength:
