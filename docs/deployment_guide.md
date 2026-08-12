@@ -51,7 +51,7 @@ Do not overwrite the VM `.env` from CI (secrets and `HEALER_AUTO_MERGE=false` ar
     4.  Restart services: `docker compose up -d`.
 
 ## 7. Environment Configuration
--   **VM Spec**: Hetzner — Ubuntu, 4 vCPU / 4GB RAM class (`ubuntu-4gb-hel1-8`), public IP `37.27.6.119`.
+-   **VM Spec**: Hetzner — Ubuntu, 4 vCPU / 4GB RAM class. **(VM decommissioned Jul 2026 — historical reference only.)**
 -   **Storage**: **38GB** root volume (`/dev/sda1`). Monitor with `df -h /`; use `vm_disk_guard.sh` and periodic sudo Docker log truncation (see [Maintenance Guide](maintenance_guide.md)).
 -   **Deploy user**: `deploy` at `/home/deploy/trading-bot`.
 -   **Networking**: Dashboard Streamlit `8501`, webserver `10000`, IB Gateway VNC `6080`, Grafana `3000` (restrict via firewall as needed).

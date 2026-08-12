@@ -4,14 +4,14 @@ This guide walks you through setting up Gemini 1.5 authentication for the tradin
 
 ## Prerequisites
 
-- Google Cloud project with billing enabled: `gen-lang-client-0536875321`
+- Google Cloud project with billing enabled: `your-gcp-project-id`
 - Google API Key (Gemini API) from [Google AI Studio](https://aistudio.google.com/)
 - Local terminal access or SSH access to your Hetzner VM
 
 ## Step 1: Enable Vertex AI API
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Select your project: `gen-lang-client-0536875321`
+2. Select your project: `your-gcp-project-id`
 3. Navigate to **APIs & Services** → **Library**
 4. Search for "Vertex AI API"
 5. Click **ENABLE**
@@ -62,7 +62,7 @@ The JSON key file will download automatically (e.g., `trading-bot-vertex-ai-xxxx
    Add these lines:
    ```bash
    # Vertex AI Configuration
-   GOOGLE_CLOUD_PROJECT=gen-lang-client-0536875321
+   GOOGLE_CLOUD_PROJECT=your-gcp-project-id
    GOOGLE_APPLICATION_CREDENTIALS=/app/config/vertex-ai-key.json
    VERTEX_AI_LOCATION=global
    
@@ -97,7 +97,7 @@ The JSON key file will download automatically (e.g., `trading-bot-vertex-ai-xxxx
 
    Add the same configuration:
    ```bash
-   GOOGLE_CLOUD_PROJECT=gen-lang-client-0536875321
+   GOOGLE_CLOUD_PROJECT=your-gcp-project-id
    GOOGLE_APPLICATION_CREDENTIALS=/app/config/vertex-ai-key.json
    VERTEX_AI_LOCATION=global
    ```
@@ -140,7 +140,7 @@ For the scheduled orchestrator workflow:
 
 3. **Add additional secrets**:
    - Name: `GOOGLE_CLOUD_PROJECT`
-   - Value: `gen-lang-client-0536875321`
+   - Value: `your-gcp-project-id`
 
 The workflow file will be updated separately to use these secrets.
 
@@ -172,7 +172,7 @@ Default Vertex AI quotas may still be too low for heavy batch operations.
 
 ```bash
 cd ~/rsi-macd-bot
-export GOOGLE_CLOUD_PROJECT=gen-lang-client-0536875321
+export GOOGLE_CLOUD_PROJECT=your-gcp-project-id
 export GOOGLE_APPLICATION_CREDENTIALS=$PWD/config/vertex-ai-key.json
 export VERTEX_AI_LOCATION=global
 
@@ -182,7 +182,7 @@ python -c "from trading_bot.core.vertex_ai_client import VertexAIClient; c = Ver
 
 Expected output:
 ```
-✅ Vertex AI initialized: gemini-1.5-flash (project=gen-lang-client-0536875321, location=global)
+✅ Vertex AI initialized: gemini-1.5-flash (project=your-gcp-project-id, location=global)
 Available: True
 ```
 

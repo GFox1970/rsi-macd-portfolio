@@ -8,8 +8,8 @@ To ensure the bot executes correctly, perform these steps **30 minutes before ma
 2.  **IBKR Connectivity**:
     -   **Auto-Login**: The `ib-gateway` container is configured to log in automatically using **IBC**.
     -   **Monitoring**: You can monitor the Gateway screen via your browser:
-        -   **URL**: `http://<HETZNER_IP>:6080` (Hetzner production: `37.27.6.119:6080`)
-        -   **Password**: `secret` (unless changed in `docker-compose.yml`).
+        -   **URL**: `http://<VM_HOST>:6080` (production VM removed; use local Docker Compose if testing)
+        -   **Password**: Set via `VNC_PASSWORD` in `.env` / `docker-compose.yml` — never commit real values.
     -   **Manual Intervention**: Only required if 2FA is triggered during the daily restart.
     -   **API ports**: Gateway exposes `4002` internally; the **trading-bot** connects to **`ib-gateway:8888`** (socat bridge) per `IBKR_PORT` in `.env` / `docker-compose.yml`.
     -   **UK (LSE)**: Confirm **LSE Equities** market-data subscription is active in IBKR Client Portal (typically £1/mo). Live `.L` bars come from IBKR, not Yahoo.
