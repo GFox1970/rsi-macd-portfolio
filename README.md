@@ -1,5 +1,7 @@
 # RSI-MACD Trading Bot (Phase 3)
 
+> **Project closed (Sep 2026):** Trading-bot **development has ended** and the production deployment is **shut down** (VM removed). This **public repository** is a **documentation and portfolio mirror** only — screenshots, design docs, and architecture write-ups for reference. It is **not** an active codebase and does **not** receive application updates. There is no live bot, no maintainer support, and no expectation that readers can run a production stack from this repo alone.
+
 A fully autonomous, machine-learning-enhanced trading system designed for consistent profitability in US and Global markets. This system leverages technical analysis (RSI/MACD), XGBoost confidence gating, and a VIX-based Survival Mode.
 
 ## 🚀 Key Features (Phase 3.5)
@@ -148,5 +150,9 @@ The Hetzner VM has a 40GB disk. To prevent "No space left on device" errors duri
     This removes all unused images, containers, and build cache, typically reclaiming 5-15GB.
 3.  **Logs**: Logs are automatically rotated, but large logs in `/app/logs` can be cleared if necessary.
 
+## About this mirror
+
+This repo exists to showcase **AI Residency (AIR)** portfolio material and mirrored documentation from the trading-bot project. The authoritative application source lived in a separate private repository that is now **archived on GitHub**; this mirror will not be updated with new trading logic unless the project is explicitly reopened.
+
 ---
-*Developed for Advanced Agentic Trading.*
+*Developed for Advanced Agentic Trading. Project closed — documentation mirror only (Sep 2026).*
